@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CommonManaged, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libraries\CommonManaged.dll</HintPath>
+    </Reference>
     <Reference Include="DatabaseManaged">
       <HintPath>..\Libraries\DatabaseManaged.dll</HintPath>
     </Reference>
