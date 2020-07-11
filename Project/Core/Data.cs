@@ -46,7 +46,7 @@ namespace Core
 			);";
 
 		private const string MIGRATION_BOURSE_2020071102 = @"
-			ALTER TABLE `bourse_analyzer`.`snapshot_data` 
+			ALTER TABLE `snapshot_data` 
 			DROP COLUMN `sell_count`,
 			DROP COLUMN `sell_amount`,
 			DROP COLUMN `sell_price`,

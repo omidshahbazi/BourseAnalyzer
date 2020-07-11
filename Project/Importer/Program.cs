@@ -58,8 +58,7 @@ namespace Importer
 
 			ConsoleHelper.WriteInfo("Importing [{0}] for {1}...", FilePath, dateTime);
 
-			XLSXImporter.Info info = new XLSXImporter.Info { Time = dateTime, Data = stocksData };
-			XLSXImporter.Import(Data.Database, info);
+			XLSXImporter.Import(Data.Database, new XLSXImporter.Info { Time = dateTime, Data = stocksData });
 
 			ConsoleHelper.WriteInfo("Importing done");
 		}
