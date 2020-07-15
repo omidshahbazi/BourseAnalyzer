@@ -15,10 +15,10 @@ namespace Core
 		{
 			nextUpdateTime = DateTime.Now.Date;
 
-			//if (DateTime.Now.Hour > WorkHour)
+			//if (DateTime.Now.TimeOfDay.TotalHours > WorkHour)
 			//	nextUpdateTime = nextUpdateTime.AddDays(1);
 
-			nextUpdateTime = nextUpdateTime.AddHours(WorkHour);
+			//nextUpdateTime = nextUpdateTime.AddHours(WorkHour);
 		}
 
 		public void Update()

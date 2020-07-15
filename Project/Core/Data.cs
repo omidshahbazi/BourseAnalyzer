@@ -85,7 +85,7 @@ namespace Core
 			ALTER TABLE `snapshot_data` RENAME TO  `snapshots`;";
 
 		private const string MIGRATION_BOURSE_2020071401 = @"
-			CREATE TABLE `test_bourse`.`analyze_results` (
+			CREATE TABLE `analyze_results` (
 				`id` INT NOT NULL AUTO_INCREMENT,
 				`stock_id` INT NOT NULL,
 				`analyze_time` DATETIME NOT NULL,

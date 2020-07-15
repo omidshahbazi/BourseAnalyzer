@@ -14,7 +14,7 @@ namespace Core
 			if (Data.Rows.Count == 0)
 				return true;
 
-			for (int i = 1; i <= Data.Rows.Count; ++i)
+			for (int i = 0; i < Data.Rows.Count; ++i)
 			{
 				DataRow row = Data.Rows[i];
 
@@ -34,7 +34,7 @@ namespace Core
 
 			string dateTime = Time.ToString("yyyy/MM/dd hh:mm:ss");
 
-			for (int i = 1; i <= Data.Rows.Count; ++i)
+			for (int i = 0; i < Data.Rows.Count; ++i)
 			{
 				DataRow row = Data.Rows[i];
 
