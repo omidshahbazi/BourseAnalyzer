@@ -6,8 +6,19 @@ namespace Core
 {
 	public static class Data
 	{
-		private static readonly string[] MIGRATIONS = new string[] { MIGRATION_BOURSE_2020071101, MIGRATION_BOURSE_2020071102 };
-		private static readonly string[] MIGRATIONS_NAME = new string[] { "Migration_Bourse_2020071101", "Migration_Bourse_2020071102" };
+		private static readonly string[] MIGRATIONS = new string[] {
+			MIGRATION_BOURSE_2020071101,
+			MIGRATION_BOURSE_2020071102,
+			MIGRATION_BOURSE_2020071201,
+			MIGRATION_BOURSE_2020071301,
+			MIGRATION_BOURSE_2020071401};
+
+		private static readonly string[] MIGRATIONS_NAME = new string[] {
+			"Migration_Bourse_2020071101",
+			"Migration_Bourse_2020071102",
+			"Migration_Bourse_2020071201",
+			"Migration_Bourse_2020071301",
+			"Migration_Bourse_2020071401" };
 
 		private const string MIGRATION_BOURSE_2020071101 = @"
 			CREATE TABLE `stocks` (
@@ -55,6 +66,33 @@ namespace Core
 			DROP COLUMN `buy_count`,
 			DROP COLUMN `pe`,
 			DROP COLUMN `eps`;";
+
+		private const string MIGRATION_BOURSE_2020071201 = @"
+			ALTER TABLE `snapshot_data` 
+			DROP COLUMN `last_price_percent`,
+			DROP COLUMN `last_price_change`,
+			DROP COLUMN `last_transaction_percent`,
+			DROP COLUMN `last_transaction_change`,
+			CHANGE COLUMN `maximum` `high` INT NOT NULL AFTER `first`,
+			CHANGE COLUMN `minimum` `low` INT NOT NULL AFTER `high`,
+			CHANGE COLUMN `last_transaction_amount` `last` INT NOT NULL,
+			CHANGE COLUMN `last_price_amount` `close` INT NOT NULL AFTER `last`,
+			CHANGE COLUMN `size` `volume` BIGINT(64) NOT NULL,
+			CHANGE COLUMN `value` `value` BIGINT(64) NOT NULL,
+			CHANGE COLUMN `yesterday` `open` INT NOT NULL;";
+
+		private const string MIGRATION_BOURSE_2020071301 = @"
+			ALTER TABLE `snapshot_data` RENAME TO  `snapshots`;";
+
+		private const string MIGRATION_BOURSE_2020071401 = @"
+			CREATE TABLE `test_bourse`.`analyze_results` (
+				`id` INT NOT NULL AUTO_INCREMENT,
+				`stock_id` INT NOT NULL,
+				`analyze_time` DATETIME NOT NULL,
+				`action` INT NOT NULL,
+				`action_time` DATETIME NOT NULL,
+				PRIMARY KEY (`id`)
+			);";
 
 		public static Database Database
 		{
