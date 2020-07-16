@@ -30,7 +30,7 @@ namespace Core
 				DataRow row = stocksTable.Rows[i];
 
 				int id = Convert.ToInt32(row["id"]);
-
+				id = 1;
 				DataTable historyTable = Data.Database.QueryDataTable("SELECT UNIX_TIMESTAMP(take_time) take_time, count, volume, value, open, first, high, low, last, close FROM snapshots WHERE stock_id=@stock_id", "stock_id", id);
 
 				Analyzer.Info info = new Analyzer.Info(id, row["symbol"].ToString(), historyTable, liveTable);

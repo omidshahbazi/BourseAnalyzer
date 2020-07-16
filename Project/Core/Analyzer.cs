@@ -10,6 +10,8 @@ namespace Core
 		{
 			public int Index;
 			public int Time;
+			public int High;
+			public int Low;
 			public int Close;
 		}
 
@@ -60,108 +62,71 @@ namespace Core
 
 				//int beginTime = Convert.ToInt32(Info.HistoryData.Rows[0]["take_time"]);
 
-				int changeSum = 0;
-				for (int i = 0; i < Info.HistoryData.Rows.Count; i++)
-				{
-					DataRow currRow = Info.HistoryData.Rows[i];
+				DataTable table = Info.HistoryData;
 
-					changeSum += Math.Abs(Convert.ToInt32(currRow["close"]) - Convert.ToInt32(currRow["open"]));
-				}
+				SpotList pitSpots = new SpotList();
+				FindExtremums(table, pitSpots, (PrevClose, CurrClose, NextClose) => { return !(CurrClose > PrevClose || NextClose < CurrClose); });
 
-				float changeAvg = changeSum / (float)Info.HistoryData.Rows.Count;
+				SpotList peakSpots = new SpotList();
+				FindExtremums(table, peakSpots, (PrevClose, CurrClose, NextClose) => { return (PrevClose > CurrClose || CurrClose < PrevClose); });
 
-				Spot prevSpot = null;
-				SpotList lowestLows = new SpotList();
-				for (int i = 1; i < Info.HistoryData.Rows.Count - 1; ++i)
-				{
-					DataRow prevRow = Info.HistoryData.Rows[i - 1];
-					DataRow currRow = Info.HistoryData.Rows[i];
-					DataRow nextRow = Info.HistoryData.Rows[i + 1];
-
-					int prevClose = Convert.ToInt32(prevRow["close"]);
-					int currClose = Convert.ToInt32(currRow["close"]);
-					int nextClose = Convert.ToInt32(nextRow["close"]);
-
-					if (currClose > prevClose || nextClose < currClose)
-						continue;
-
-					if (prevSpot != null && prevSpot.Close == currClose)
-						continue;
-
-					prevSpot = new Spot() { Index = i, Time = Convert.ToInt32(currRow["take_time"]), Close = currClose };
-
-					lowestLows.Add(prevSpot);
-				}
-
-				SpotList highestHighs = new SpotList();
-				for (int i = 1; i < Info.HistoryData.Rows.Count - 1; ++i)
-				{
-					DataRow prevRow = Info.HistoryData.Rows[i - 1];
-					DataRow currRow = Info.HistoryData.Rows[i];
-					DataRow nextRow = Info.HistoryData.Rows[i + 1];
-
-					int prevClose = Convert.ToInt32(prevRow["close"]);
-					int currClose = Convert.ToInt32(currRow["close"]);
-					int nextClose = Convert.ToInt32(nextRow["close"]);
-
-					if (prevClose > currClose || currClose < nextClose)
-						continue;
-
-					if (prevSpot != null && prevSpot.Close == currClose)
-						continue;
-
-					prevSpot = new Spot() { Index = i, Time = Convert.ToInt32(currRow["take_time"]), Close = currClose };
-
-					highestHighs.Add(prevSpot);
-
-					if (highestHighs.Count == 3)
-						break;
-				}
-
-				int startIndex = 0;
-				int hitCount = 0;
-				while (startIndex < lowestLows.Count - 2)
-				{
-					Spot firstSpot = lowestLows[startIndex++];
-					Spot secondSpot = lowestLows[startIndex];
-
-					float slope = CalculateSlope(firstSpot, secondSpot);
-					if (slope < 0)
+				ValidateSpots(pitSpots,
+					(float Slope) => { return !(Slope < 0); },
+					(Spot Spot, float EstimatedClose) =>
 					{
-						hitCount = 0;
+						return !(Spot.Close < EstimatedClose &&
+								Spot.High < EstimatedClose &&
+								Spot.Low < EstimatedClose &&
+								(EstimatedClose - Spot.Close) / Spot.Close > 0.01F);
+					});
 
-						continue;
-					}
+				//int startIndex = 0;
+				//int hitCount = 0;
+				//while (startIndex < pitSpots.Count - 2)
+				//{
+				//	Spot firstSpot = pitSpots[startIndex++];
+				//	Spot secondSpot = pitSpots[startIndex];
 
-					bool lineBroke = false;
-					for (int i = startIndex + 1; i < lowestLows.Count; ++i)
-					{
-						Spot spot = lowestLows[i];
+				//	float slope = CalculateSlope(firstSpot, secondSpot);
+				//	if (slope < 0)
+				//	{
+				//		hitCount = 0;
 
-						float y = CalculateClose(firstSpot, slope, spot.Time);
+				//		continue;
+				//	}
 
-						if (y > spot.Close && y - spot.Close > changeAvg)
-						{
-							startIndex = i;
-							hitCount = 0;
-							lineBroke = true;
+				//	bool lineBroke = false;
+				//	for (int i = startIndex + 1; i < pitSpots.Count; ++i)
+				//	{
+				//		Spot spot = pitSpots[i];
 
-							break;
-						}
+				//		float y = CalculateClose(firstSpot, slope, spot.Time);
 
-						++hitCount;
-					}
+				//		if (spot.Close < y &&
+				//			spot.High < y &&
+				//			spot.Low < y &&
+				//			(y - spot.Close) / spot.Close > 0.01F)
+				//		{
+				//			startIndex = i;
+				//			hitCount = 0;
+				//			lineBroke = true;
 
-					if (lineBroke)
-						continue;
+				//			break;
+				//		}
 
-					break;
-				}
+				//		++hitCount;
+				//	}
 
-				if (hitCount != 0)
-				{
-					Console.WriteLine("{0} {1} {2}%", Info.ID, hitCount, ((hitCount + 2) / (float)lowestLows.Count) * 100);
-				}
+				//	if (lineBroke)
+				//		continue;
+
+				//	break;
+				//}
+
+				//if (hitCount != 0)
+				//{
+				//	Console.WriteLine("{0} {1} {2}%", Info.ID, hitCount, ((hitCount + 2) / (float)pitSpots.Count) * 100);
+				//}
 
 				//if (lowestLows.Count == 3)
 				//{
@@ -198,34 +163,76 @@ namespace Core
 				//}
 			}
 
-			public static void MakePowerTrendline(DataTable Data)
+			private static void FindExtremums(DataTable Table, SpotList List, Func<int, int, int, bool> Comparison)
 			{
-				double[] sums = new double[4];
-
-				for (int i = 0; i < Data.Rows.Count; ++i)
+				Spot prevSpot = null;
+				for (int i = 1; i < Table.Rows.Count - 1; ++i)
 				{
-					DataRow row = Data.Rows[i];
+					DataRow prevRow = Table.Rows[i - 1];
+					DataRow currRow = Table.Rows[i];
+					DataRow nextRow = Table.Rows[i + 1];
 
-					double logX = Math.Log(Convert.ToInt32(row["take_time"]));
-					double logY = Math.Log(Convert.ToInt32(row["close"]));
+					int prevClose = Convert.ToInt32(prevRow["close"]);
+					int currClose = Convert.ToInt32(currRow["close"]);
+					int nextClose = Convert.ToInt32(nextRow["close"]);
 
-					sums[0] += logX;
-					sums[1] += logY;
-					sums[2] += logX * logY;
-					sums[3] += logX * logX;
+					if (!Comparison(prevClose, currClose, nextClose))
+						continue;
+
+					if (prevSpot != null && prevSpot.Close == currClose)
+						continue;
+
+					prevSpot = new Spot() { Index = i, Time = Convert.ToInt32(currRow["take_time"]), High = Convert.ToInt32(currRow["high"]), Low = Convert.ToInt32(currRow["low"]), Close = currClose };
+
+					List.Add(prevSpot);
+				}
+			}
+
+			private static void ValidateSpots(SpotList List, Func<float, bool> CheckSlope, Func<Spot, float, bool> CheckInfiltrate)
+			{
+				int startIndex = 0;
+				int hitCount = 0;
+				while (startIndex < List.Count - 2)
+				{
+					Spot firstSpot = List[startIndex++];
+					Spot secondSpot = List[startIndex];
+
+					float slope = CalculateSlope(firstSpot, secondSpot);
+					if (!CheckSlope(slope))
+					{
+						hitCount = 0;
+
+						continue;
+					}
+
+					bool lineBroke = false;
+					for (int i = startIndex + 1; i < List.Count; ++i)
+					{
+						Spot spot = List[i];
+
+						float estimatedClose = CalculateClose(firstSpot, slope, spot.Time);
+
+						if (!CheckInfiltrate(spot, estimatedClose))
+						{
+							startIndex = i;
+							hitCount = 0;
+							lineBroke = true;
+
+							break;
+						}
+
+						++hitCount;
+					}
+
+					if (lineBroke)
+						continue;
+
+					break;
 				}
 
-				double b = (Data.Rows.Count * sums[2] - sums[0] * sums[1]) / (Data.Rows.Count * sums[3] - (sums[0] * sums[0]));
-				double a = Math.Pow(Math.E, (sums[1] - b * sums[0]) / Data.Rows.Count);
-
-				for (int i = 0; i < Data.Rows.Count; ++i)
+				if (hitCount != 0)
 				{
-					DataRow row = Data.Rows[i];
-
-					int x = Convert.ToInt32(row["take_time"]);
-					int y = Convert.ToInt32(row["close"]);
-
-					row["close"] = a * (x * x);
+					Console.WriteLine("{0} {1} {2}%", 1/*Info.ID*/, hitCount, ((hitCount + 2) / (float)List.Count) * 100);
 				}
 			}
 
