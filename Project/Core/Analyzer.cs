@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GameFramework.Common.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -6,18 +7,6 @@ namespace Core
 {
 	public static class Analyzer
 	{
-		private class Spot
-		{
-			public int Index;
-			public int Time;
-			public int High;
-			public int Low;
-			public int Close;
-		}
-
-		private class SpotList : List<Spot>
-		{ }
-
 		public class Info
 		{
 			public int ID
@@ -55,52 +44,101 @@ namespace Core
 
 		public class TendLine
 		{
+			private class Spot
+			{
+				public int Index;
+
+				public int Time;
+
+				public int High;
+				public int Low;
+				public int Close;
+
+				public bool IsExtremum;
+			}
+
+			private class SpotList : List<Spot>
+			{ }
+
+			private class ValidateResult
+			{
+				public bool IsValid;
+				public float Slope;
+				public int HitCount;
+			}
+
+			private const int SECONDS_PER_DAY = 86400;
+			private const int DAYS_PER_MONTH = 22;
+
+			private const int LONG_TERM_SECONDS = 6 * DAYS_PER_MONTH * SECONDS_PER_DAY;
+
+			private const float SHORT_TERM_INFILITRATE_RATE = 0.01F;
+			private const float LONG_TERM_INFILITRATE_RATE = 0.03F;
+
 			public static void Analyze(Info Info)
 			{
-				//if (Info.HistoryData.Rows.Count < 0)
-				//	return;
+				DataTable data = Info.HistoryData;
 
-				//int beginTime = Convert.ToInt32(Info.HistoryData.Rows[0]["take_time"]);
-
-				DataTable table = Info.HistoryData;
+				int dayCount = data.Rows.Count;
+				double rate = MathHelper.Clamp(SECONDS_PER_DAY / (double)LONG_TERM_SECONDS * LONG_TERM_INFILITRATE_RATE, SHORT_TERM_INFILITRATE_RATE, LONG_TERM_INFILITRATE_RATE);
 
 				// Ascending
 				SpotList pitSpots = new SpotList();
-				FindExtremums(table, pitSpots, (PrevClose, CurrClose, NextClose) => { return !(CurrClose > PrevClose || NextClose < CurrClose); });
+				FindExtremums(data, pitSpots, (PrevClose, CurrClose, NextClose) => { return (PrevClose >= CurrClose && CurrClose <= NextClose); });
 
-				ValidateSpots(pitSpots,
-					(float Slope) => { return (Slope > 0); },
+				ValidateResult growthResult = ValidateSpots(data, pitSpots, 0,
+					(float Slope) => { return (Slope > float.Epsilon); },
 					(Spot Spot, float EstimatedClose) =>
 					{
 						return !(Spot.Close < EstimatedClose &&
 								Spot.High < EstimatedClose &&
 								Spot.Low < EstimatedClose &&
-								(EstimatedClose - Spot.Close) / Spot.Close > 0.01F);
+								(EstimatedClose - Spot.Close) / Spot.Close > rate);
 					});
 
 				// Descending
-				//SpotList peakSpots = new SpotList();
-				//FindExtremums(table, peakSpots, (PrevClose, CurrClose, NextClose) => { return (PrevClose > CurrClose || CurrClose < PrevClose); });
+				SpotList peakSpots = new SpotList();
+				FindExtremums(data, peakSpots, (PrevClose, CurrClose, NextClose) => { return (CurrClose >= PrevClose && NextClose <= CurrClose); });
 
-				//ValidateSpots(peakSpots,
-				//	(float Slope) => { return (Slope < 0); },
-				//	(Spot Spot, float EstimatedClose) =>
-				//	{
-				//		return !(Spot.Close > EstimatedClose &&
-				//				Spot.High > EstimatedClose &&
-				//				Spot.Low > EstimatedClose &&
-				//				(Spot.Close - EstimatedClose) / Spot.Close < 0.01F);
-				//	});
+				ValidateResult shrinkResult = ValidateSpots(data, peakSpots, 0,
+					(float Slope) => { return (Slope < -float.Epsilon); },
+					(Spot Spot, float EstimatedClose) =>
+					{
+						return !(Spot.Close > EstimatedClose &&
+								Spot.High > EstimatedClose &&
+								Spot.Low > EstimatedClose &&
+								(Spot.Close - EstimatedClose) / Spot.Close > rate);
+					});
+
+				if (growthResult.IsValid || shrinkResult.IsValid)
+				{
+					Console.Write("Stock: {0} ", Info.ID);
+
+					Console.Write("Status: ");
+
+					if (growthResult.IsValid && shrinkResult.IsValid)
+						Console.Write("Suspicious ");
+
+					if (growthResult.IsValid)
+						Console.Write("Growing Speed: ~{0}IRR/day ", (int)(growthResult.Slope * SECONDS_PER_DAY));
+
+					if (shrinkResult.IsValid)
+						Console.Write("Shrinking Speed: ~{0}IRR/day ", -(int)(shrinkResult.Slope * SECONDS_PER_DAY));
+
+					Console.Write("Worthiness: {0}%", (int)((growthResult.IsValid ? growthResult.HitCount : 1) / (float)(shrinkResult.IsValid ? shrinkResult.HitCount : 1) * 100));
+
+					Console.WriteLine();
+				}
 			}
 
-			private static void FindExtremums(DataTable Table, SpotList List, Func<int, int, int, bool> Comparison)
+			private static void FindExtremums(DataTable Data, SpotList List, Func<int, int, int, bool> Comparison)
 			{
 				Spot prevSpot = null;
-				for (int i = 1; i < Table.Rows.Count - 1; ++i)
+				for (int i = 1; i < Data.Rows.Count - 1; ++i)
 				{
-					DataRow prevRow = Table.Rows[i - 1];
-					DataRow currRow = Table.Rows[i];
-					DataRow nextRow = Table.Rows[i + 1];
+					DataRow prevRow = Data.Rows[i - 1];
+					DataRow currRow = Data.Rows[i];
+					DataRow nextRow = Data.Rows[i + 1];
 
 					int prevClose = Convert.ToInt32(prevRow["close"]);
 					int currClose = Convert.ToInt32(currRow["close"]);
@@ -112,25 +150,46 @@ namespace Core
 					if (prevSpot != null && prevSpot.Close == currClose)
 						continue;
 
-					prevSpot = new Spot() { Index = i, Time = Convert.ToInt32(currRow["take_time"]), High = Convert.ToInt32(currRow["high"]), Low = Convert.ToInt32(currRow["low"]), Close = currClose };
+					prevSpot = new Spot() { Index = i, Time = Convert.ToInt32(currRow["relative_time"]), High = Convert.ToInt32(currRow["high"]), Low = Convert.ToInt32(currRow["low"]), Close = currClose, IsExtremum = true };
+
+					List.Add(prevSpot);
+				}
+
+				if (prevSpot == null)
+					return;
+
+				for (int i = prevSpot.Index + 1; i < Data.Rows.Count; ++i)
+				{
+					DataRow currRow = Data.Rows[i];
+
+					int currClose = Convert.ToInt32(currRow["close"]);
+
+					if (prevSpot != null && prevSpot.Close == currClose)
+						continue;
+
+					prevSpot = new Spot() { Index = i, Time = Convert.ToInt32(currRow["relative_time"]), High = Convert.ToInt32(currRow["high"]), Low = Convert.ToInt32(currRow["low"]), Close = currClose, IsExtremum = false };
 
 					List.Add(prevSpot);
 				}
 			}
 
-			private static void ValidateSpots(SpotList List, Func<float, bool> CheckSlope, Func<Spot, float, bool> CheckInfiltrate)
+			private static ValidateResult ValidateSpots(DataTable Data, SpotList List, int StartIndex, Func<float, bool> CheckSlope, Func<Spot, float, bool> CheckInfiltrate)
 			{
-				int startIndex = 0;
+				int startIndex = StartIndex;
+
 				int hitCount = 0;
+				float slope = 0;
+
 				while (startIndex < List.Count - 2)
 				{
 					Spot firstSpot = List[startIndex++];
 					Spot secondSpot = List[startIndex];
 
-					float slope = CalculateSlope(firstSpot, secondSpot);
+					slope = CalculateSlope(firstSpot, secondSpot);
 					if (!CheckSlope(slope))
 					{
 						hitCount = 0;
+						slope = 0;
 
 						continue;
 					}
@@ -145,13 +204,17 @@ namespace Core
 						if (!CheckInfiltrate(spot, estimatedClose))
 						{
 							startIndex = i;
+
 							hitCount = 0;
+							slope = 0;
+
 							lineBroke = true;
 
 							break;
 						}
 
-						++hitCount;
+						if (spot.IsExtremum)
+							++hitCount;
 					}
 
 					if (lineBroke)
@@ -160,10 +223,7 @@ namespace Core
 					break;
 				}
 
-				if (hitCount != 0)
-				{
-					Console.WriteLine("{0} {1} {2}%", 1/*Info.ID*/, hitCount, ((hitCount + 2) / (float)List.Count) * 100);
-				}
+				return new ValidateResult() { IsValid = (hitCount != 0), Slope = slope, HitCount = 2 + hitCount };
 			}
 
 			private static float CalculateSlope(Spot A, Spot B)

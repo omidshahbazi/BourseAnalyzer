@@ -7,7 +7,7 @@ namespace Core
 {
 	public class DataAnalyzer : Worker
 	{
-		private static readonly Action<Analyzer.Info>[] Analyzers = new Action<Analyzer.Info>[] { Analyzer.TendLine.Analyze, Analyzer.DirectionChange.Analyze };
+		private static readonly Action<Analyzer.Info>[] Analyzers = new Action<Analyzer.Info>[] { Analyzer.TendLine.Analyze };
 
 		protected override float WorkHour
 		{
@@ -30,8 +30,8 @@ namespace Core
 				DataRow row = stocksTable.Rows[i];
 
 				int id = Convert.ToInt32(row["id"]);
-				id = 1;
-				DataTable historyTable = Data.Database.QueryDataTable("SELECT UNIX_TIMESTAMP(take_time) take_time, count, volume, value, open, first, high, low, last, close FROM snapshots WHERE stock_id=@stock_id", "stock_id", id);
+
+				DataTable historyTable = Data.Database.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close, UNIX_TIMESTAMP(take_time) - UNIX_TIMESTAMP('2015/01/01') relative_time FROM snapshots WHERE stock_id=@stock_id", "stock_id", id);
 
 				Analyzer.Info info = new Analyzer.Info(id, row["symbol"].ToString(), historyTable, liveTable);
 
