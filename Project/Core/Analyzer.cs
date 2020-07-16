@@ -64,14 +64,12 @@ namespace Core
 
 				DataTable table = Info.HistoryData;
 
+				// Ascending
 				SpotList pitSpots = new SpotList();
 				FindExtremums(table, pitSpots, (PrevClose, CurrClose, NextClose) => { return !(CurrClose > PrevClose || NextClose < CurrClose); });
 
-				SpotList peakSpots = new SpotList();
-				FindExtremums(table, peakSpots, (PrevClose, CurrClose, NextClose) => { return (PrevClose > CurrClose || CurrClose < PrevClose); });
-
 				ValidateSpots(pitSpots,
-					(float Slope) => { return !(Slope < 0); },
+					(float Slope) => { return (Slope > 0); },
 					(Spot Spot, float EstimatedClose) =>
 					{
 						return !(Spot.Close < EstimatedClose &&
@@ -80,87 +78,19 @@ namespace Core
 								(EstimatedClose - Spot.Close) / Spot.Close > 0.01F);
 					});
 
-				//int startIndex = 0;
-				//int hitCount = 0;
-				//while (startIndex < pitSpots.Count - 2)
-				//{
-				//	Spot firstSpot = pitSpots[startIndex++];
-				//	Spot secondSpot = pitSpots[startIndex];
+				// Descending
+				//SpotList peakSpots = new SpotList();
+				//FindExtremums(table, peakSpots, (PrevClose, CurrClose, NextClose) => { return (PrevClose > CurrClose || CurrClose < PrevClose); });
 
-				//	float slope = CalculateSlope(firstSpot, secondSpot);
-				//	if (slope < 0)
+				//ValidateSpots(peakSpots,
+				//	(float Slope) => { return (Slope < 0); },
+				//	(Spot Spot, float EstimatedClose) =>
 				//	{
-				//		hitCount = 0;
-
-				//		continue;
-				//	}
-
-				//	bool lineBroke = false;
-				//	for (int i = startIndex + 1; i < pitSpots.Count; ++i)
-				//	{
-				//		Spot spot = pitSpots[i];
-
-				//		float y = CalculateClose(firstSpot, slope, spot.Time);
-
-				//		if (spot.Close < y &&
-				//			spot.High < y &&
-				//			spot.Low < y &&
-				//			(y - spot.Close) / spot.Close > 0.01F)
-				//		{
-				//			startIndex = i;
-				//			hitCount = 0;
-				//			lineBroke = true;
-
-				//			break;
-				//		}
-
-				//		++hitCount;
-				//	}
-
-				//	if (lineBroke)
-				//		continue;
-
-				//	break;
-				//}
-
-				//if (hitCount != 0)
-				//{
-				//	Console.WriteLine("{0} {1} {2}%", Info.ID, hitCount, ((hitCount + 2) / (float)pitSpots.Count) * 100);
-				//}
-
-				//if (lowestLows.Count == 3)
-				//{
-				//Spot firstSpot = lowestLows[2];
-				//Spot middleSpot = lowestLows[1];
-				//Spot lastSpot = lowestLows[0];
-
-				//float y = FindClose(firstSpot, middleSpot, lastSpot.Time);
-
-				//if (y > lastSpot.Close || lastSpot.Close - y < changeAvg)
-				//{
-				//	// should buy
-				//	//Data.Database.Execute("INSERT INTO analyze_results(stock_id, analyze_time, action, action_time) VALUES(@stock_id, NOW(), @action, NOW())", //TIMESTAMPADD(second, 6 * 3600, TIMESTAMPADD(DAY, 1, DATE(NOW())))
-				//	//	"stock_id", Info.ID,
-				//	//	"action", sign);
-				//}
-				//}
-
-				//if (highestHighs.Count == 3)
-				//{
-				//	Spot firstSpot = highestHighs[2];
-				//	Spot middleSpot = highestHighs[1];
-				//	Spot lastSpot = highestHighs[0];
-
-				//	float y = FindClose(firstSpot, middleSpot, lastSpot.Time);
-
-				//	if (y > lastSpot.Close || lastSpot.Close - y < changeAvg)
-				//	{
-				//		// should buy
-				//		//Data.Database.Execute("INSERT INTO analyze_results(stock_id, analyze_time, action, action_time) VALUES(@stock_id, NOW(), @action, NOW())", //TIMESTAMPADD(second, 6 * 3600, TIMESTAMPADD(DAY, 1, DATE(NOW())))
-				//		//	"stock_id", Info.ID,
-				//		//	"action", sign);
-				//	}
-				//}
+				//		return !(Spot.Close > EstimatedClose &&
+				//				Spot.High > EstimatedClose &&
+				//				Spot.Low > EstimatedClose &&
+				//				(Spot.Close - EstimatedClose) / Spot.Close < 0.01F);
+				//	});
 			}
 
 			private static void FindExtremums(DataTable Table, SpotList List, Func<int, int, int, bool> Comparison)
