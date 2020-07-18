@@ -15,10 +15,10 @@ namespace Core
 		{
 			nextUpdateTime = DateTime.Now.Date;
 
-			//if (DateTime.Now.TimeOfDay.TotalHours > WorkHour)
-			//	nextUpdateTime = nextUpdateTime.AddDays(1);
+			if (DateTime.Now.TimeOfDay.TotalHours > WorkHour)
+				nextUpdateTime = nextUpdateTime.AddDays(1);
 
-			//nextUpdateTime = nextUpdateTime.AddHours(WorkHour);
+			nextUpdateTime = nextUpdateTime.AddHours(WorkHour);
 		}
 
 		public void Update()
@@ -26,8 +26,8 @@ namespace Core
 			if (DateTime.Now < nextUpdateTime)
 				return;
 
-			//if (nextUpdateTime.DayOfWeek != DayOfWeek.Thursday &&
-			//	nextUpdateTime.DayOfWeek != DayOfWeek.Friday)
+			if (nextUpdateTime.DayOfWeek != DayOfWeek.Thursday &&
+				nextUpdateTime.DayOfWeek != DayOfWeek.Friday)
 			{
 				if (!Do())
 					return;

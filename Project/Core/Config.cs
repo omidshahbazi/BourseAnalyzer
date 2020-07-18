@@ -1,13 +1,42 @@
 ﻿using GameFramework.ASCIISerializer;
 using GameFramework.DatabaseManaged;
-using System;
 using System.IO;
 
 namespace Core
 {
+	public struct UpdaterConfig
+	{
+		public float WorkHour;
+	}
+
+	public struct TrendLineConfig
+	{
+		public int LongTermSeconds;
+		public float ShortTermInfiltrate;
+		public float LongTermInfiltrate;
+	}
+
+	public struct RelativeStrengthIndexConfig
+	{
+		public int MaxHistoryCount;
+		public float LowRSI;
+		public float HighRSI;
+	}
+
+	public struct AnalyzerConfig
+	{
+		public float WorkHour;
+
+		public TrendLineConfig TrendLine;
+		public RelativeStrengthIndexConfig RelativeStrengthIndex;
+	}
+
 	public struct Config
 	{
 		public Database.CreateInfo DatabaseConnection;
+
+		public UpdaterConfig Updater;
+		public AnalyzerConfig Analyzer;
 	}
 
 	public static class ConfigManager

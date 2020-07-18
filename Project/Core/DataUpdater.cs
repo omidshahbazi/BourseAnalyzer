@@ -8,7 +8,7 @@ namespace Core
 	{
 		protected override float WorkHour
 		{
-			get { return 17F; }
+			get { return ConfigManager.Config.Updater.WorkHour; }
 		}
 
 		protected override bool Do()

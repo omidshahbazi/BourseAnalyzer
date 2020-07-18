@@ -6,11 +6,8 @@ namespace Worker
 	{
 		private static void Main(string[] args)
 		{
-			//Manager manager = new Manager();
-			//manager.Run();
-
-			DataAnalyzer analyzer = new DataAnalyzer();
-			analyzer.Update();
+			Manager manager = new Manager();
+			manager.Run();
 		}
 	}
 }

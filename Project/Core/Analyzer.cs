@@ -9,47 +9,23 @@ namespace Core
 	{
 		public class Info
 		{
-			public int ID
-			{
-				get;
-				private set;
-			}
+			public int ID;
 
-			public string Symbol
-			{
-				get;
-				private set;
-			}
+			public string Symbol;
 
-			public DataTable HistoryData
-			{
-				get;
-				private set;
-			}
-
-			public DataTable LiveData
-			{
-				get;
-				private set;
-			}
-
-			public DataTable AnalyzedData
-			{
-				get;
-				private set;
-			}
-
-			public Info(int ID, string Symbol, DataTable HistoryData, DataTable LiveData, DataTable AnalyzedData)
-			{
-				this.ID = ID;
-				this.Symbol = Symbol;
-				this.HistoryData = HistoryData;
-				this.LiveData = LiveData;
-				this.AnalyzedData = AnalyzedData;
-			}
+			public DataTable HistoryData;
+			public DataTable LiveData;
+			public DataTable AnalyzesData;
 		}
 
-		public class TendLine
+		public class Result
+		{
+			public int Action;
+			public double Worthiness;
+			public int FirstSnapshotID;
+		}
+
+		public static class TendLine
 		{
 			private class Spot
 			{
@@ -78,19 +54,28 @@ namespace Core
 			}
 
 			private const int SECONDS_PER_DAY = 86400;
-			private const int DAYS_PER_MONTH = 22;
 
-			private const int LONG_TERM_SECONDS = 6 * DAYS_PER_MONTH * SECONDS_PER_DAY;
+			private static int LongTermSeconds
+			{
+				get { return ConfigManager.Config.Analyzer.TrendLine.LongTermSeconds; }
+			}
 
-			private const float SHORT_TERM_INFILITRATE_RATE = 0.01F;
-			private const float LONG_TERM_INFILITRATE_RATE = 0.03F;
+			private static float ShortTermInfiltrate
+			{
+				get { return ConfigManager.Config.Analyzer.TrendLine.ShortTermInfiltrate; }
+			}
 
-			public static void Analyze(Info Info)
+			private static float LongTermInfiltrate
+			{
+				get { return ConfigManager.Config.Analyzer.TrendLine.LongTermInfiltrate; }
+			}
+
+			public static Result Analyze(Info Info)
 			{
 				DataTable data = Info.HistoryData;
 
 				int dayCount = data.Rows.Count;
-				double allowedRate = MathHelper.Clamp(SECONDS_PER_DAY * dayCount / (double)LONG_TERM_SECONDS * LONG_TERM_INFILITRATE_RATE, SHORT_TERM_INFILITRATE_RATE, LONG_TERM_INFILITRATE_RATE);
+				double allowedRate = MathHelper.Clamp(SECONDS_PER_DAY * dayCount / (double)LongTermSeconds * LongTermInfiltrate, ShortTermInfiltrate, LongTermInfiltrate);
 
 				int startFromIndex = 0;//???? fetch
 
@@ -140,15 +125,13 @@ namespace Core
 
 				if (growthResult.IsValid != shrinkResult.IsValid)
 				{
-					int action = growthResult.IsValid ? 1 : -1;
+					int action = (growthResult.IsValid ? 1 : -1);
 					float worthiness = growthResult.IsValid ? (growthResult.HitCount / (float)pitSpots.Count) : (shrinkResult.HitCount / (float)peakSpots.Count);
 
-					Data.Database.Execute("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness, first_snapshot_id) VALUES(@stock_id, NOW(), @action, @worthiness, @first_snapshot_id)",
-					"stock_id", Info.ID,
-					"action", action,
-					"worthiness", worthiness,
-					"first_snapshot_id", growthResult.FirstSpot.ID);
+					return new Result() { Action = action, Worthiness = worthiness, FirstSnapshotID = growthResult.FirstSpot.ID };
 				}
+
+				return null;
 			}
 
 			private static void FindExtremums(DataTable Data, int StartIndex, SpotList List, Func<int, int, int, bool> Comparison)
@@ -259,33 +242,81 @@ namespace Core
 			}
 		}
 
-		public class RelativeStrengthIndex
+		public static class RelativeStrengthIndex
 		{
-			private const int MINIMUM_HISTORY_COUNT = 14;
+			private const float MAX_RSI = 1;
 
-			public static void Analyze(Info Info)
+			private static int MaxHistoryCount
+			{
+				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.MaxHistoryCount; }
+			}
+
+			private static float LowRSI
+			{
+				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.LowRSI; }
+			}
+
+			private static float HighRSI
+			{
+				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.HighRSI; }
+			}
+
+			public static Result Analyze(Info Info)
 			{
 				DataTable data = Info.HistoryData;
 
 				DataTable rsiTable = GenerateRSIData(data);
+				if (rsiTable == null)
+					return null;
 
-				double lastRSI = 0;
-				for (int i = 0; i < rsiTable.Rows.Count; ++i)
+				int action = 0;
+				double worthiness = 0;
+				double currRSI = 0;
+
+				for (int i = 1; i < rsiTable.Rows.Count; ++i)
 				{
-					DataRow row = rsiTable.Rows[i];
+					double prevRSI = Convert.ToDouble(rsiTable.Rows[i - 1]["rsi"]);
+					currRSI = Convert.ToDouble(rsiTable.Rows[i]["rsi"]);
 
-					double rsi = Convert.ToDouble(row["rsi"]);
+					if (LowRSI < prevRSI && prevRSI < HighRSI)
+					{
+						action = 0;
+						worthiness = 0;
 
-					
+						continue;
+					}
+
+					if (prevRSI <= LowRSI && currRSI >= LowRSI)
+					{
+						action = 1;
+						worthiness = (LowRSI - prevRSI) / LowRSI;
+
+						continue;
+					}
+
+					if (prevRSI >= HighRSI && currRSI <= HighRSI)
+					{
+						action = -1;
+						worthiness = (prevRSI - HighRSI) / (MAX_RSI - HighRSI);
+
+						continue;
+					}
 				}
+
+				//if (action == 1)
+				//	Console.WriteLine("Buy: {0} RSI: {1}% Worthiness: {2}%", Info.ID, (int)(currRSI * 100), (int)(worthiness * 100));
+				//else if (action == -1)
+				//	Console.WriteLine("Sell: {0} RSI: {1}% Worthiness: {2}%", Info.ID, (int)(currRSI * 100), (int)(worthiness * 100));
+
+				return new Result() { Action = action, Worthiness = worthiness, FirstSnapshotID = Convert.ToInt32(data.Rows[data.Rows.Count - MaxHistoryCount]["id"]) };
 			}
 
 			private static DataTable GenerateRSIData(DataTable Data)
 			{
-				if (Data.Rows.Count < MINIMUM_HISTORY_COUNT)
+				if (Data.Rows.Count < MaxHistoryCount)
 					return null;
 
-				int fromIndex = Data.Rows.Count - MINIMUM_HISTORY_COUNT;
+				int startFromIndex = Data.Rows.Count - MaxHistoryCount;
 
 				DataTable rsiData = new DataTable();
 				rsiData.Columns.Add("gain", typeof(int));
@@ -295,15 +326,15 @@ namespace Core
 				double gainAvg = 0;
 				double lossAvg = 0;
 
-				for (int i = fromIndex; i < Data.Rows.Count; ++i)
+				for (int i = startFromIndex; i < Data.Rows.Count; ++i)
 				{
 					DataRow row = Data.Rows[i];
 
 					int open = Convert.ToInt32(row["open"]);
 					int close = Convert.ToInt32(row["close"]);
 
-					int gain = (close > open ? close - open : 0);
-					int loss = (open > close ? open - close : 0);
+					int gain = (open < close ? close - open : 0);
+					int loss = (close < open ? open - close : 0);
 
 					rsiData.Rows.Add(gain, loss, 0);
 
@@ -311,8 +342,8 @@ namespace Core
 					lossAvg += loss;
 				}
 
-				gainAvg /= MINIMUM_HISTORY_COUNT;
-				lossAvg /= MINIMUM_HISTORY_COUNT;
+				gainAvg /= MaxHistoryCount;
+				lossAvg /= MaxHistoryCount;
 
 				rsiData.Rows[0]["rsi"] = CalculateRSI(gainAvg, lossAvg);
 
@@ -320,8 +351,8 @@ namespace Core
 				{
 					DataRow row = rsiData.Rows[i];
 
-					gainAvg = (gainAvg * (MINIMUM_HISTORY_COUNT - 1) + Convert.ToInt32(row["gain"])) / MINIMUM_HISTORY_COUNT;
-					lossAvg = (lossAvg * (MINIMUM_HISTORY_COUNT - 1) + Convert.ToInt32(row["loss"])) / MINIMUM_HISTORY_COUNT;
+					gainAvg = (gainAvg * (MaxHistoryCount - 1) + Convert.ToInt32(row["gain"])) / MaxHistoryCount;
+					lossAvg = (lossAvg * (MaxHistoryCount - 1) + Convert.ToInt32(row["loss"])) / MaxHistoryCount;
 
 					row["rsi"] = CalculateRSI(gainAvg, lossAvg);
 				}
@@ -335,53 +366,9 @@ namespace Core
 			private static double CalculateRSI(double GainAverage, double LossAverage)
 			{
 				if (LossAverage == 0)
-					return 100;
+					return 1;
 
-				return 100 - (100 / (1 + GainAverage / LossAverage));
-			}
-		}
-
-		public static class DirectionChange
-		{
-			public static void Analyze(Info Info)
-			{
-				List<int> closes = new List<int>();
-
-				int prevSign = 0;
-				for (int i = 0; i < Info.HistoryData.Rows.Count; ++i)
-				{
-					DataRow row = Info.HistoryData.Rows[i];
-
-					int close = Convert.ToInt32(row["close"]);
-
-					int prevClose = 0;
-					Info.LiveData.DefaultView.RowFilter = "symbol='" + Info.Symbol + "'";
-					if (Info.LiveData.DefaultView.Count != 0)
-						prevClose = Convert.ToInt32(Info.LiveData.DefaultView[0]["close"]);
-
-					int sign = Math.Sign(close - prevClose);
-
-					if (sign == 0)
-						continue;
-
-					float rate = close / (float)prevClose;
-
-					rate *= 100;
-
-					if (prevSign != sign)
-					{
-						//Data.Database.Execute("INSERT INTO analyze_results(stock_id, analyze_time, action, action_time) VALUES(@stock_id, NOW(), @action, NOW())", //TIMESTAMPADD(second, 6 * 3600, TIMESTAMPADD(DAY, 1, DATE(NOW())))
-						//	"stock_id", Info.ID,
-						//	"action", sign);
-
-						closes.Clear();
-						closes.Add(prevClose);
-					}
-
-					closes.Add(close);
-
-					prevSign = sign;
-				}
+				return MAX_RSI - (MAX_RSI / (1 + (GainAverage / LossAverage)));
 			}
 		}
 	}
