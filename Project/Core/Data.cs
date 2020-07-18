@@ -11,14 +11,18 @@ namespace Core
 			MIGRATION_BOURSE_2020071102,
 			MIGRATION_BOURSE_2020071201,
 			MIGRATION_BOURSE_2020071301,
-			MIGRATION_BOURSE_2020071401};
+			MIGRATION_BOURSE_2020071401,
+			MIGRATION_BOURSE_2020071801,
+			MIGRATION_BOURSE_2020071802 };
 
 		private static readonly string[] MIGRATIONS_NAME = new string[] {
 			"Migration_Bourse_2020071101",
 			"Migration_Bourse_2020071102",
 			"Migration_Bourse_2020071201",
 			"Migration_Bourse_2020071301",
-			"Migration_Bourse_2020071401" };
+			"Migration_Bourse_2020071401",
+			"Migration_Bourse_2020071801",
+			"Migration_Bourse_2020071802" };
 
 		private const string MIGRATION_BOURSE_2020071101 = @"
 			CREATE TABLE `stocks` (
@@ -93,6 +97,16 @@ namespace Core
 				`action_time` DATETIME NOT NULL,
 				PRIMARY KEY (`id`)
 			);";
+
+		private const string MIGRATION_BOURSE_2020071801 = @"
+			ALTER TABLE `analyze_results` 
+			DROP COLUMN `action_time`,
+			ADD COLUMN `worthiness` FLOAT NOT NULL AFTER `action`,
+			ADD COLUMN `first_snapshot_id` INT NOT NULL AFTER `worthiness`;";
+
+		private const string MIGRATION_BOURSE_2020071802 = @"
+			ALTER TABLE `analyze_results` 
+			RENAME TO `analyzes` ;";
 
 		public static Database Database
 		{

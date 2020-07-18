@@ -1,13 +1,12 @@
 ﻿using GameFramework.Common.Utilities;
 using System;
 using System.Data;
-using System.IO;
 
 namespace Core
 {
 	public class DataAnalyzer : Worker
 	{
-		private static readonly Action<Analyzer.Info>[] Analyzers = new Action<Analyzer.Info>[] { Analyzer.TendLine.Analyze };
+		private static readonly Action<Analyzer.Info>[] Analyzers = new Action<Analyzer.Info>[] { Analyzer.RelativeStrengthIndex.Analyze };
 
 		protected override float WorkHour
 		{
@@ -18,12 +17,14 @@ namespace Core
 		{
 			ConsoleHelper.WriteInfo("Analyzing data...");
 
-			DataTable stocksTable = Data.Database.QueryDataTable("SELECT id, symbol FROM stocks");
-
 			//DataTable liveTable = DataDownloader.Download();
 			//if (liveTable == null)
 			//	return false;
-			DataTable liveTable = XLSXConverter.ToDataTable(File.ReadAllBytes("D:/MarketWatchPlus-1399_4_25.xlsx"));
+
+			DataTable liveTable = null;
+
+			DataTable stocksTable = Data.Database.QueryDataTable("SELECT id, symbol FROM stocks");
+			DataTable analyzesTable = Data.Database.QueryDataTable("SELECT stock_id, first_snapshot_id FROM analyzes ORDER BY analyze_time LIMIT @count", "count", stocksTable.Rows.Count);
 
 			for (int i = 0; i < stocksTable.Rows.Count; ++i)
 			{
@@ -31,9 +32,9 @@ namespace Core
 
 				int id = Convert.ToInt32(row["id"]);
 
-				DataTable historyTable = Data.Database.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close, UNIX_TIMESTAMP(take_time) - UNIX_TIMESTAMP('2015/01/01') relative_time FROM snapshots WHERE stock_id=@stock_id", "stock_id", id);
+				DataTable historyTable = Data.Database.QueryDataTable("SELECT id, take_time, count, volume, value, open, first, high, low, last, close, UNIX_TIMESTAMP(take_time) - UNIX_TIMESTAMP('2015/01/01') relative_time FROM snapshots WHERE stock_id=@stock_id", "stock_id", id);
 
-				Analyzer.Info info = new Analyzer.Info(id, row["symbol"].ToString(), historyTable, liveTable);
+				Analyzer.Info info = new Analyzer.Info(id, row["symbol"].ToString(), historyTable, liveTable, analyzesTable);
 
 				for (int j = 0; j < Analyzers.Length; ++j)
 					Analyzers[j](info);

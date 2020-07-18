@@ -26,8 +26,12 @@ namespace Core
 			if (DateTime.Now < nextUpdateTime)
 				return;
 
-			if (!Do())
-				return;
+			//if (nextUpdateTime.DayOfWeek != DayOfWeek.Thursday &&
+			//	nextUpdateTime.DayOfWeek != DayOfWeek.Friday)
+			{
+				if (!Do())
+					return;
+			}
 
 			nextUpdateTime = nextUpdateTime.AddDays(1);
 		}
