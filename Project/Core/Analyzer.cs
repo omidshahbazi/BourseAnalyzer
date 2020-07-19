@@ -244,6 +244,8 @@ namespace Core
 
 		public static class RelativeStrengthIndex
 		{
+			//https://blog.quantinsti.com/rsi-indicator/
+
 			private const float MAX_RSI = 1;
 
 			private static int MaxHistoryCount
@@ -251,9 +253,19 @@ namespace Core
 				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.MaxHistoryCount; }
 			}
 
+			private static int CalclationCount
+			{
+				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.CalclationCount; }
+			}
+
 			private static float LowRSI
 			{
 				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.LowRSI; }
+			}
+
+			private static float MidRSI
+			{
+				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.MidRSI; }
 			}
 
 			private static float HighRSI
@@ -269,38 +281,30 @@ namespace Core
 				if (rsiTable == null)
 					return null;
 
+				int lastIndex = rsiTable.Rows.Count - 1;
+				double prevRSI = Convert.ToDouble(rsiTable.Rows[lastIndex - 1]["rsi"]);
+				double currRSI = Convert.ToDouble(rsiTable.Rows[lastIndex]["rsi"]);
+
 				int action = 0;
 				double worthiness = 0;
-				double currRSI = 0;
 
-				for (int i = 1; i < rsiTable.Rows.Count; ++i)
+				if (prevRSI <= LowRSI && LowRSI < currRSI)
 				{
-					double prevRSI = Convert.ToDouble(rsiTable.Rows[i - 1]["rsi"]);
-					currRSI = Convert.ToDouble(rsiTable.Rows[i]["rsi"]);
-
-					if (LowRSI < prevRSI && prevRSI < HighRSI)
-					{
-						action = 0;
-						worthiness = 0;
-
-						continue;
-					}
-
-					if (prevRSI <= LowRSI && currRSI >= LowRSI)
-					{
-						action = 1;
-						worthiness = (LowRSI - prevRSI) / LowRSI;
-
-						continue;
-					}
-
-					if (prevRSI >= HighRSI && currRSI <= HighRSI)
-					{
-						action = -1;
-						worthiness = (prevRSI - HighRSI) / (MAX_RSI - HighRSI);
-
-						continue;
-					}
+					action = 1;
+					worthiness = (LowRSI - prevRSI) / LowRSI;
+				}
+				else if (prevRSI <= MidRSI && MidRSI < currRSI)
+				{
+					action = 1;
+				}
+				else if (HighRSI <= prevRSI && currRSI < HighRSI)
+				{
+					action = -1;
+					worthiness = (prevRSI - HighRSI) / (MAX_RSI - HighRSI);
+				}
+				else if (MidRSI <= prevRSI && currRSI < MidRSI)
+				{
+					action = -1;
 				}
 
 				//if (action == 1)
@@ -313,22 +317,24 @@ namespace Core
 
 			private static DataTable GenerateRSIData(DataTable Data)
 			{
-				if (Data.Rows.Count < MaxHistoryCount)
+				int requiredCount = MaxHistoryCount + CalclationCount - 1;
+
+				if (Data.Rows.Count < requiredCount)
 					return null;
 
-				int startFromIndex = Data.Rows.Count - MaxHistoryCount;
+				int startFromIndex = Data.Rows.Count - requiredCount;
+
+				double gainAvg = 0;
+				double lossAvg = 0;
 
 				DataTable rsiData = new DataTable();
 				rsiData.Columns.Add("gain", typeof(int));
 				rsiData.Columns.Add("loss", typeof(int));
 				rsiData.Columns.Add("rsi", typeof(double));
 
-				double gainAvg = 0;
-				double lossAvg = 0;
-
-				for (int i = startFromIndex; i < Data.Rows.Count; ++i)
+				for (int i = 0; i < requiredCount; ++i)
 				{
-					DataRow row = Data.Rows[i];
+					DataRow row = Data.Rows[startFromIndex + i];
 
 					int open = Convert.ToInt32(row["open"]);
 					int close = Convert.ToInt32(row["close"]);
@@ -338,18 +344,23 @@ namespace Core
 
 					rsiData.Rows.Add(gain, loss, 0);
 
-					gainAvg += gain;
-					lossAvg += loss;
+					if (i < MaxHistoryCount)
+					{
+						gainAvg += gain;
+						lossAvg += loss;
+					}
 				}
 
 				gainAvg /= MaxHistoryCount;
 				lossAvg /= MaxHistoryCount;
 
-				rsiData.Rows[0]["rsi"] = CalculateRSI(gainAvg, lossAvg);
+				startFromIndex = rsiData.Rows.Count - CalclationCount;
 
-				for (int i = 1; i < rsiData.Rows.Count; ++i)
+				rsiData.Rows[startFromIndex++]["rsi"] = CalculateRSI(gainAvg, lossAvg);
+
+				for (int i = 0; i < CalclationCount - 1; ++i)
 				{
-					DataRow row = rsiData.Rows[i];
+					DataRow row = rsiData.Rows[startFromIndex + i];
 
 					gainAvg = (gainAvg * (MaxHistoryCount - 1) + Convert.ToInt32(row["gain"])) / MaxHistoryCount;
 					lossAvg = (lossAvg * (MaxHistoryCount - 1) + Convert.ToInt32(row["loss"])) / MaxHistoryCount;
@@ -359,6 +370,9 @@ namespace Core
 
 				rsiData.Columns.RemoveAt(0);
 				rsiData.Columns.RemoveAt(0);
+
+				for (int i = 1; i < startFromIndex; ++i)
+					rsiData.Rows.RemoveAt(0);
 
 				return rsiData;
 			}

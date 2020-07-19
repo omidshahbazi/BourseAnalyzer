@@ -13,7 +13,8 @@ namespace Core
 			MIGRATION_BOURSE_2020071301,
 			MIGRATION_BOURSE_2020071401,
 			MIGRATION_BOURSE_2020071801,
-			MIGRATION_BOURSE_2020071802 };
+			MIGRATION_BOURSE_2020071802,
+			MIGRATION_BOURSE_2020071901 };
 
 		private static readonly string[] MIGRATIONS_NAME = new string[] {
 			"Migration_Bourse_2020071101",
@@ -22,7 +23,8 @@ namespace Core
 			"Migration_Bourse_2020071301",
 			"Migration_Bourse_2020071401",
 			"Migration_Bourse_2020071801",
-			"Migration_Bourse_2020071802" };
+			"Migration_Bourse_2020071802",
+			"Migration_Bourse_2020071901" };
 
 		private const string MIGRATION_BOURSE_2020071101 = @"
 			CREATE TABLE `stocks` (
@@ -107,6 +109,10 @@ namespace Core
 		private const string MIGRATION_BOURSE_2020071802 = @"
 			ALTER TABLE `analyze_results` 
 			RENAME TO `analyzes` ;";
+
+		private const string MIGRATION_BOURSE_2020071901 = @"
+			CREATE VIEW `analyzes_view` AS
+			SELECT s.id, s.symbol, s.name, a.analyze_time, a.action, a.worthiness*100 worthiness FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id;";
 
 		public static Database Database
 		{

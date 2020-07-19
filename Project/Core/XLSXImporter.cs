@@ -32,7 +32,7 @@ namespace Core
 
 			StringBuilder builder = new StringBuilder();
 
-			string dateTime = Time.ToString("yyyy/MM/dd hh:mm:ss");
+			string dateTime = Time.ToDatabaseDateTime();
 
 			for (int i = 0; i < Data.Rows.Count; ++i)
 			{

@@ -19,7 +19,9 @@ namespace Core
 	public struct RelativeStrengthIndexConfig
 	{
 		public int MaxHistoryCount;
+		public int CalclationCount;
 		public float LowRSI;
+		public float MidRSI;
 		public float HighRSI;
 	}
 

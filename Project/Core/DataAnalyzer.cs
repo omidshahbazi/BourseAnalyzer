@@ -1,6 +1,7 @@
 ﻿using GameFramework.Common.Utilities;
 using System;
 using System.Data;
+using System.Text;
 
 namespace Core
 {
@@ -23,6 +24,10 @@ namespace Core
 
 			DataTable stocksTable = Data.Database.QueryDataTable("SELECT id, symbol FROM stocks");
 			DataTable analyzesTable = Data.Database.QueryDataTable("SELECT stock_id, first_snapshot_id FROM analyzes ORDER BY analyze_time LIMIT @count", "count", stocksTable.Rows.Count);
+
+			string dateTime = DateTime.UtcNow.ToDatabaseDateTime();
+
+			StringBuilder query = new StringBuilder();
 
 			for (int i = 0; i < stocksTable.Rows.Count; ++i)
 			{
@@ -49,12 +54,23 @@ namespace Core
 					continue;
 
 				if (result.Action != 0)
-					Data.Database.Execute("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness, first_snapshot_id) VALUES(@stock_id, NOW(), @action, @worthiness, @first_snapshot_id)",
-					"stock_id", id,
-					"action", result.Action,
-					"worthiness", result.Worthiness,
-					"first_snapshot_id", result.FirstSnapshotID);
+				{
+					query.Append("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness, first_snapshot_id) VALUES(");
+					query.Append(id);
+					query.Append(",'");
+					query.Append(dateTime);
+					query.Append("',");
+					query.Append(result.Action);
+					query.Append(',');
+					query.Append(result.Worthiness);
+					query.Append(',');
+					query.Append(result.FirstSnapshotID);
+					query.Append(");");
+				}
 			}
+
+			if (query.Length != 0)
+				Data.Database.Execute(query.ToString());
 
 			ConsoleHelper.WriteInfo("Analyzing data done");
 

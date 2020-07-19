@@ -1,4 +1,5 @@
 ﻿using OfficeOpenXml;
+using System;
 
 namespace Core
 {
@@ -14,6 +15,11 @@ namespace Core
 			{ }
 
 			return DefaultValue;
+		}
+
+		public static string ToDatabaseDateTime(this DateTime Self)
+		{
+			return Self.ToString("yyyy/MM/dd hh:mm:ss");
 		}
 	}
 }

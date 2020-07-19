@@ -6,6 +6,12 @@ namespace Core
 {
 	public static class XLSXConverter
 	{
+		private static readonly char[][] CHAR_MAP = new char[][]
+		{
+			new char[] {'ك','ک' },
+			new char[] {'ي','ی' }
+		};
+
 		public static DataTable ToDataTable(byte[] Data)
 		{
 			ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -35,8 +41,8 @@ namespace Core
 			{
 				int row = HEADER_ROW_COUNT + i;
 
-				string symbol = sheet.GetValue<string>(row, 1, "");
-				string name = sheet.GetValue<string>(row, 2, "");
+				string symbol = ReplaceInvalidCharacters(sheet.GetValue<string>(row, 1, ""));
+				string name = ReplaceInvalidCharacters(sheet.GetValue<string>(row, 2, ""));
 				int count = sheet.GetValue<int>(row, 3, 0);
 				long volume = sheet.GetValue<long>(row, 4, 0);
 				long value = sheet.GetValue<long>(row, 5, 0);
@@ -51,6 +57,18 @@ namespace Core
 			}
 
 			return table;
+		}
+
+		private static string ReplaceInvalidCharacters(string Value)
+		{
+			for (int i = 0; i < CHAR_MAP.Length; ++i)
+			{
+				char[] chars = CHAR_MAP[i];
+
+				Value = Value.Replace(chars[0], chars[1]);
+			}
+
+			return Value;
 		}
 	}
 }

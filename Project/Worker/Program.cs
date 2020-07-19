@@ -8,6 +8,9 @@ namespace Worker
 		{
 			Manager manager = new Manager();
 			manager.Run();
+
+			//DataAnalyzer analyzer = new DataAnalyzer();
+			//analyzer.Update();
 		}
 	}
 }
