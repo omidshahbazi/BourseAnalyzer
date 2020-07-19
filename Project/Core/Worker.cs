@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GameFramework.Common.Utilities;
+using System;
 
 namespace Core
 {
@@ -19,6 +20,8 @@ namespace Core
 				nextUpdateTime = nextUpdateTime.AddDays(1);
 
 			nextUpdateTime = nextUpdateTime.AddHours(WorkHour);
+
+			ConsoleHelper.WriteInfo("{0} scheduled for {1}", GetType().Name, nextUpdateTime);
 		}
 
 		public void Update()
@@ -34,6 +37,8 @@ namespace Core
 			}
 
 			nextUpdateTime = nextUpdateTime.AddDays(1);
+
+			ConsoleHelper.WriteInfo("{0} scheduled for {1}", GetType().Name, nextUpdateTime);
 		}
 
 		protected abstract bool Do();
