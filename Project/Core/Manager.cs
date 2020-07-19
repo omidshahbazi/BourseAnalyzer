@@ -18,7 +18,7 @@ namespace Core
 				for (int i = 0; i < workers.Length; ++i)
 					workers[i].Update();
 
-				Thread.Sleep(86400);
+				Thread.Sleep(ConfigManager.Config.CheckSchedulesPeriod * 1000);
 			}
 		}
 	}

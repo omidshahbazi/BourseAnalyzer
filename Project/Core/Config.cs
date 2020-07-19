@@ -37,6 +37,8 @@ namespace Core
 	{
 		public Database.CreateInfo DatabaseConnection;
 
+		public int CheckSchedulesPeriod;
+
 		public UpdaterConfig Updater;
 		public AnalyzerConfig Analyzer;
 	}
