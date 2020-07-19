@@ -11,7 +11,7 @@ namespace Core
 
 		protected override float WorkHour
 		{
-			get { return ConfigManager.Config.Analyzer.WorkHour; }
+			get { return ConfigManager.Config.DataAnalyzer.WorkHour; }
 		}
 
 		protected override bool Do()

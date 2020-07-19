@@ -57,17 +57,17 @@ namespace Core
 
 			private static int LongTermSeconds
 			{
-				get { return ConfigManager.Config.Analyzer.TrendLine.LongTermSeconds; }
+				get { return ConfigManager.Config.DataAnalyzer.TrendLine.LongTermSeconds; }
 			}
 
 			private static float ShortTermInfiltrate
 			{
-				get { return ConfigManager.Config.Analyzer.TrendLine.ShortTermInfiltrate; }
+				get { return ConfigManager.Config.DataAnalyzer.TrendLine.ShortTermInfiltrate; }
 			}
 
 			private static float LongTermInfiltrate
 			{
-				get { return ConfigManager.Config.Analyzer.TrendLine.LongTermInfiltrate; }
+				get { return ConfigManager.Config.DataAnalyzer.TrendLine.LongTermInfiltrate; }
 			}
 
 			public static Result Analyze(Info Info)
@@ -250,27 +250,27 @@ namespace Core
 
 			private static int MaxHistoryCount
 			{
-				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.MaxHistoryCount; }
+				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.MaxHistoryCount; }
 			}
 
 			private static int CalclationCount
 			{
-				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.CalclationCount; }
+				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CalclationCount; }
 			}
 
 			private static float LowRSI
 			{
-				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.LowRSI; }
+				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.LowRSI; }
 			}
 
 			private static float MidRSI
 			{
-				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.MidRSI; }
+				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.MidRSI; }
 			}
 
 			private static float HighRSI
 			{
-				get { return ConfigManager.Config.Analyzer.RelativeStrengthIndex.HighRSI; }
+				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.HighRSI; }
 			}
 
 			public static Result Analyze(Info Info)
@@ -312,7 +312,7 @@ namespace Core
 				//else if (action == -1)
 				//	Console.WriteLine("Sell: {0} RSI: {1}% Worthiness: {2}%", Info.ID, (int)(currRSI * 100), (int)(worthiness * 100));
 
-				return new Result() { Action = action, Worthiness = worthiness, FirstSnapshotID = Convert.ToInt32(data.Rows[data.Rows.Count - MaxHistoryCount]["id"]) };
+				return new Result() { Action = action, Worthiness = worthiness, FirstSnapshotID = Convert.ToInt32(data.Rows[data.Rows.Count - 1]["id"]) };
 			}
 
 			private static DataTable GenerateRSIData(DataTable Data)

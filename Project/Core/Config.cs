@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Core
 {
-	public struct UpdaterConfig
+	public struct DataUpdaterConfig
 	{
 		public float WorkHour;
 	}
@@ -25,12 +25,17 @@ namespace Core
 		public float HighRSI;
 	}
 
-	public struct AnalyzerConfig
+	public struct DataAnalyzerConfig
 	{
 		public float WorkHour;
 
 		public TrendLineConfig TrendLine;
 		public RelativeStrengthIndexConfig RelativeStrengthIndex;
+	}
+
+	public struct AnalyzeValidatorConfig
+	{
+		public float WorkHour;
 	}
 
 	public struct Config
@@ -39,8 +44,9 @@ namespace Core
 
 		public int CheckSchedulesPeriod;
 
-		public UpdaterConfig Updater;
-		public AnalyzerConfig Analyzer;
+		public DataUpdaterConfig DataUpdater;
+		public DataAnalyzerConfig DataAnalyzer;
+		public AnalyzeValidatorConfig AnalyzeValidator;
 	}
 
 	public static class ConfigManager

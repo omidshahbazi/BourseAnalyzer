@@ -8,7 +8,7 @@ namespace Core
 
 		public Manager()
 		{
-			workers = new Worker[] { new DataUpdater(), new DataAnalyzer() };
+			workers = new Worker[] { new DataUpdater(), new DataAnalyzer(), new AnalyzeValidator() };
 		}
 
 		public void Run()
