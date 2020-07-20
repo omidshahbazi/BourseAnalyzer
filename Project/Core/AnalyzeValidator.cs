@@ -1,5 +1,4 @@
-﻿using GameFramework.Common.Utilities;
-using System;
+﻿using System;
 using System.Data;
 using System.Text;
 
@@ -7,20 +6,19 @@ namespace Core
 {
 	public class AnalyzeValidator : Worker
 	{
-		protected override float WorkHour
+		public override float WorkHour
 		{
 			get { return ConfigManager.Config.AnalyzeValidator.WorkHour; }
 		}
 
-		protected override bool Do()
+		public override bool Do(DateTime CurrentDateTime)
 		{
-			ConsoleHelper.WriteInfo("Validaing analyzes...");
+			DateTime startTime = CurrentDateTime.Date.AddDays(-1);
+			if (CurrentDateTime.DayOfWeek == DayOfWeek.Saturday)
+				startTime = startTime.AddDays(-2);
 
-			DataTable startDateData = Data.Database.QueryDataTable("SELECT TIMESTAMPADD(DAY, IF(DAYOFWEEK(NOW())=7, -3, -1), DATE(NOW())) start_date");
-			DateTime startDate = Convert.ToDateTime(startDateData.Rows[0]["start_date"]);
-
-			DataTable analyzesData = Data.Database.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=@date", "date", startDate);
-			DataTable snapshotsData = Data.Database.QueryDataTable("SELECT stock_id, open, close FROM snapshots WHERE DATE(take_time)=DATE(NOW())");
+			DataTable analyzesData = Data.Database.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=@date", "date", startTime);
+			DataTable snapshotsData = Data.Database.QueryDataTable("SELECT stock_id, open, close FROM snapshots WHERE DATE(take_time)=DATE(UTC_TIMESTAMP())");
 
 			StringBuilder query = new StringBuilder();
 
@@ -46,8 +44,6 @@ namespace Core
 
 			if (query.Length != 0)
 				Data.Database.Execute(query.ToString());
-
-			ConsoleHelper.WriteInfo("Validating analyzes done");
 
 			return true;
 		}

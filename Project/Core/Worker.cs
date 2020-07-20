@@ -1,46 +1,14 @@
-﻿using GameFramework.Common.Utilities;
-using System;
+﻿using System;
 
 namespace Core
 {
 	public abstract class Worker
 	{
-		private DateTime nextUpdateTime = DateTime.MinValue;
-
-		protected abstract float WorkHour
+		public abstract float WorkHour
 		{
 			get;
 		}
 
-		public Worker()
-		{
-			nextUpdateTime = DateTime.Now.Date;
-
-			if (DateTime.Now.TimeOfDay.TotalHours > WorkHour)
-				nextUpdateTime = nextUpdateTime.AddDays(1);
-
-			nextUpdateTime = nextUpdateTime.AddHours(WorkHour);
-
-			ConsoleHelper.WriteInfo("{0} scheduled for {1}", GetType().Name, nextUpdateTime);
-		}
-
-		public void Update()
-		{
-			if (DateTime.Now < nextUpdateTime)
-				return;
-
-			if (nextUpdateTime.DayOfWeek != DayOfWeek.Thursday &&
-				nextUpdateTime.DayOfWeek != DayOfWeek.Friday)
-			{
-				if (!Do())
-					return;
-			}
-
-			nextUpdateTime = nextUpdateTime.AddDays(1);
-
-			ConsoleHelper.WriteInfo("{0} scheduled for {1}", GetType().Name, nextUpdateTime);
-		}
-
-		protected abstract bool Do();
+		public abstract bool Do(DateTime CurrentDateTime);
 	}
 }

@@ -19,7 +19,7 @@ namespace Core
 
 		public static string ToDatabaseDateTime(this DateTime Self)
 		{
-			return Self.ToString("yyyy/MM/dd hh:mm:ss");
+			return Self.ToString("yyyy/MM/dd HH:mm:ss");
 		}
 	}
 }

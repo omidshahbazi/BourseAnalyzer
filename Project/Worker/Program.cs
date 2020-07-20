@@ -8,9 +8,6 @@ namespace Worker
 		{
 			Manager manager = new Manager();
 			manager.Run();
-
-			//AnalyzeValidator worker = new AnalyzeValidator();
-			//worker.Update();
 		}
 	}
 }

@@ -6,25 +6,29 @@ namespace Core
 {
 	public class DataUpdater : Worker
 	{
-		protected override float WorkHour
+		public override float WorkHour
 		{
 			get { return ConfigManager.Config.DataUpdater.WorkHour; }
 		}
 
-		protected override bool Do()
+		public override bool Do(DateTime CurrentDateTime)
 		{
 			ConsoleHelper.WriteInfo("Downloading today's stocks info...");
 
-			DataTable data = DataDownloader.Download();
+			DataTable data = null;
+
+			if (CurrentDateTime.Date == DateTime.UtcNow.Date)
+				data = DataDownloader.DownloadLiveData();
+			else
+				data = DataDownloader.Download(CurrentDateTime);
+
 			if (data == null)
 				return false;
 
 			ConsoleHelper.WriteInfo("Importing today's stocks info...");
 
-			if (!XLSXImporter.Import(Data.Database, DateTime.UtcNow, data))
+			if (!XLSXImporter.Import(Data.Database, CurrentDateTime, data))
 				return false;
-
-			ConsoleHelper.WriteInfo("Updating today's stocks info done");
 
 			return true;
 		}

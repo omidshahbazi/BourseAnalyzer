@@ -9,23 +9,26 @@ namespace Core
 	{
 		private static readonly Func<Analyzer.Info, Analyzer.Result>[] Analyzers = new Func<Analyzer.Info, Analyzer.Result>[] { Analyzer.RelativeStrengthIndex.Analyze };
 
-		protected override float WorkHour
+		public override float WorkHour
 		{
 			get { return ConfigManager.Config.DataAnalyzer.WorkHour; }
 		}
 
-		protected override bool Do()
+		public override bool Do(DateTime CurrentDateTime)
 		{
-			ConsoleHelper.WriteInfo("Analyzing data...");
+			ConsoleHelper.WriteInfo("Downloading live stocks info...");
 
-			DataTable liveTable = DataDownloader.Download();
+			DataTable liveTable = DataDownloader.DownloadLiveData();
 			if (liveTable == null)
 				return false;
 
 			DataTable stocksTable = Data.Database.QueryDataTable("SELECT id, symbol FROM stocks");
-			DataTable analyzesTable = Data.Database.QueryDataTable("SELECT stock_id, first_snapshot_id FROM analyzes ORDER BY analyze_time LIMIT @count", "count", stocksTable.Rows.Count);
 
-			string dateTime = DateTime.UtcNow.ToDatabaseDateTime();
+			DataTable analyzesTable = Data.Database.QueryDataTable("SELECT stock_id, first_snapshot_id FROM analyzes WHERE DATE(analyze_time)<=DATE(@current_date) ORDER BY analyze_time LIMIT @count",
+				"count", stocksTable.Rows.Count,
+				"current_date", CurrentDateTime);
+
+			string dateTime = CurrentDateTime.ToDatabaseDateTime();
 
 			StringBuilder query = new StringBuilder();
 
@@ -35,12 +38,16 @@ namespace Core
 
 				int id = Convert.ToInt32(row["id"]);
 
-				DataTable historyTable = Data.Database.QueryDataTable("SELECT id, take_time, count, volume, value, open, first, high, low, last, close, UNIX_TIMESTAMP(take_time) - UNIX_TIMESTAMP('2015/01/01') relative_time FROM snapshots WHERE stock_id=@stock_id", "stock_id", id);
+				DataTable historyTable = Data.Database.QueryDataTable("SELECT id, take_time, count, volume, value, open, first, high, low, last, close, UNIX_TIMESTAMP(take_time) - UNIX_TIMESTAMP('2015/01/01') relative_time FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
+					"stock_id", id,
+					"current_date", CurrentDateTime);
 
 				Analyzer.Info info = new Analyzer.Info { ID = id, Symbol = row["symbol"].ToString(), HistoryData = historyTable, LiveData = liveTable, AnalyzesData = analyzesTable };
 
 				//for (int j = 0; j < Analyzers.Length; ++j)
 				//{
+				//ConsoleHelper.WriteInfo("Downloading live stocks info...");
+
 				//	Analyzer.Result result = Analyzers[j](info);
 
 				//	if (result == null)
@@ -71,8 +78,6 @@ namespace Core
 
 			if (query.Length != 0)
 				Data.Database.Execute(query.ToString());
-
-			ConsoleHelper.WriteInfo("Analyzing data done");
 
 			return true;
 		}

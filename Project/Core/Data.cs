@@ -15,7 +15,10 @@ namespace Core
 			MIGRATION_BOURSE_2020071801,
 			MIGRATION_BOURSE_2020071802,
 			MIGRATION_BOURSE_2020071901,
-			MIGRATION_BOURSE_2020071902 };
+			MIGRATION_BOURSE_2020071902,
+			MIGRATION_BOURSE_2020072001,
+			MIGRATION_BOURSE_2020072002,
+			MIGRATION_BOURSE_2020072003 };
 
 		private static readonly string[] MIGRATIONS_NAME = new string[] {
 			"Migration_Bourse_2020071101",
@@ -26,7 +29,10 @@ namespace Core
 			"Migration_Bourse_2020071801",
 			"Migration_Bourse_2020071802",
 			"Migration_Bourse_2020071901",
-			"Migration_Bourse_2020071902" };
+			"Migration_Bourse_2020071902",
+			"Migration_Bourse_2020072001",
+			"Migration_Bourse_2020072002",
+			"Migration_Bourse_2020072003" };
 
 		private const string MIGRATION_BOURSE_2020071101 = @"
 			CREATE TABLE `stocks` (
@@ -121,6 +127,35 @@ namespace Core
 				`id` INT NOT NULL AUTO_INCREMENT,
 				`analyze_id` INT NOT NULL,
 				`was_valid` INT NOT NULL,
+				PRIMARY KEY (`id`)
+			);";
+
+		private const string MIGRATION_BOURSE_2020072001 = @"
+			CREATE TABLE `trades` (
+				`id` INT NOT NULL AUTO_INCREMENT,
+				`trader_id` INT NOT NULL,
+				`stock_id` INT NOT NULL,
+				`price` INT NOT NULL,
+				`count` INT NOT NULL,
+				`action` INT NOT NULL,
+				`action_time` DATETIME NOT NULL,
+				PRIMARY KEY (`id`)
+			);";
+
+		private const string MIGRATION_BOURSE_2020072002 = @"
+			CREATE TABLE `traders` (
+				`id` int NOT NULL AUTO_INCREMENT,
+				`name` text NOT NULL,
+				`email` text NOT NULL,
+				PRIMARY KEY (`id`)
+			);";
+
+		private const string MIGRATION_BOURSE_2020072003 = @"
+			CREATE TABLE `worker_schedules` (
+				`id` INT NOT NULL AUTO_INCREMENT,
+				`name` TEXT NOT NULL,
+				`schedule_time` DATETIME NOT NULL,
+				`done` INT NOT NULL,
 				PRIMARY KEY (`id`)
 			);";
 
