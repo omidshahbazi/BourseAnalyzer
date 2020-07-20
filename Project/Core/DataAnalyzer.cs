@@ -44,34 +44,33 @@ namespace Core
 
 				Analyzer.Info info = new Analyzer.Info { ID = id, Symbol = row["symbol"].ToString(), HistoryData = historyTable, LiveData = liveTable, AnalyzesData = analyzesTable };
 
-				//for (int j = 0; j < Analyzers.Length; ++j)
-				//{
-				//ConsoleHelper.WriteInfo("Downloading live stocks info...");
+				Analyzer.Result finalResult = null;
+				for (int j = 0; j < Analyzers.Length; ++j)
+				{
+					var analyzer = Analyzers[j];
 
-				//	Analyzer.Result result = Analyzers[j](info);
+					ConsoleHelper.WriteInfo("Analyzing {0}...", analyzer.Method.DeclaringType.Name);
 
-				//	if (result == null)
-				//		continue;
+					Analyzer.Result result = analyzer(info);
 
-				//	?????
-				//}
+					if (result == null)
+						continue;
 
-				Analyzer.Result result = Analyzers[0](info);
-				if (result == null)
-					continue;
+					finalResult = result;
+				}
 
-				if (result.Action != 0)
+				if (finalResult != null && finalResult.Action != 0)
 				{
 					query.Append("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness, first_snapshot_id) VALUES(");
 					query.Append(id);
 					query.Append(",'");
 					query.Append(dateTime);
 					query.Append("',");
-					query.Append(result.Action);
+					query.Append(finalResult.Action);
 					query.Append(',');
-					query.Append(result.Worthiness);
+					query.Append(finalResult.Worthiness);
 					query.Append(',');
-					query.Append(result.FirstSnapshotID);
+					query.Append(finalResult.FirstSnapshotID);
 					query.Append(");");
 				}
 			}
