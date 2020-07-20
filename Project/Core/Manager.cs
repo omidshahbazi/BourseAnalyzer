@@ -44,7 +44,7 @@ namespace Core
 
 						query.Append("UPDATE worker_schedules SET done=1 WHERE id=");
 						query.Append(row["id"]);
-						query.Append(");");
+						query.Append(';');
 					}
 
 					DateTime nextScheduleTime = nowTime.Date.AddDays(1);

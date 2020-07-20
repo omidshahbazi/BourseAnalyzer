@@ -18,7 +18,9 @@ namespace Core
 			MIGRATION_BOURSE_2020071902,
 			MIGRATION_BOURSE_2020072001,
 			MIGRATION_BOURSE_2020072002,
-			MIGRATION_BOURSE_2020072003 };
+			MIGRATION_BOURSE_2020072003,
+			MIGRATION_BOURSE_2020072004,
+			MIGRATION_BOURSE_2020072005 };
 
 		private static readonly string[] MIGRATIONS_NAME = new string[] {
 			"Migration_Bourse_2020071101",
@@ -32,7 +34,9 @@ namespace Core
 			"Migration_Bourse_2020071902",
 			"Migration_Bourse_2020072001",
 			"Migration_Bourse_2020072002",
-			"Migration_Bourse_2020072003" };
+			"Migration_Bourse_2020072003",
+			"Migration_Bourse_2020072004",
+			"Migration_Bourse_2020072005" };
 
 		private const string MIGRATION_BOURSE_2020071101 = @"
 			CREATE TABLE `stocks` (
@@ -158,6 +162,44 @@ namespace Core
 				`done` INT NOT NULL,
 				PRIMARY KEY (`id`)
 			);";
+
+		private const string MIGRATION_BOURSE_2020072004 = @"
+			CREATE 
+				OR REPLACE ALGORITHM = UNDEFINED 
+				DEFINER = `root`@`localhost` 
+				SQL SECURITY DEFINER
+			VIEW `analyzes_view` AS
+				SELECT 
+				`s`.`id` AS `id`,
+				`s`.`symbol` AS `symbol`,
+				`s`.`name` AS `name`,
+				`a`.`analyze_time` AS `analyze_time`,
+				`a`.`action` AS `action`,
+				(`a`.`worthiness` * 100) AS `worthiness`,
+				`v`.`was_valid` AS `was_valid`
+			FROM
+				(`analyzes` `a`
+				JOIN `stocks` `s` ON ((`a`.`stock_id` = `s`.`id`))
+				JOIN `analyzes_validation` `v` ON ((`v`.`analyze_id` = `a`.`id`)));";
+
+		private const string MIGRATION_BOURSE_2020072005 = @"
+			CREATE 
+				OR REPLACE ALGORITHM = UNDEFINED 
+				DEFINER = `root`@`localhost` 
+				SQL SECURITY DEFINER
+			VIEW `analyzes_view` AS
+				SELECT 
+				`s`.`id` AS `id`,
+				`s`.`symbol` AS `symbol`,
+				`s`.`name` AS `name`,
+				`a`.`analyze_time` AS `analyze_time`,
+				`a`.`action` AS `action`,
+				(`a`.`worthiness` * 100) AS `worthiness`,
+				`v`.`was_valid` AS `was_valid`
+			FROM
+				(`analyzes` `a`
+				JOIN `stocks` `s` ON ((`a`.`stock_id` = `s`.`id`))
+				LEFT OUTER JOIN `analyzes_validation` `v` ON ((`v`.`analyze_id` = `a`.`id`)));";
 
 		public static Database Database
 		{
