@@ -38,6 +38,16 @@ namespace Core
 		public float WorkHour;
 	}
 
+	public struct AnalyzeReporterConfig
+	{
+		public float WorkHour;
+
+		public string Host;
+		public ushort Port;
+		public string Username;
+		public string Password;
+	}
+
 	public struct Config
 	{
 		public Database.CreateInfo DatabaseConnection;
@@ -47,6 +57,7 @@ namespace Core
 		public DataUpdaterConfig DataUpdater;
 		public DataAnalyzerConfig DataAnalyzer;
 		public AnalyzeValidatorConfig AnalyzeValidator;
+		public AnalyzeReporterConfig AnalyzeReporter;
 	}
 
 	public static class ConfigManager

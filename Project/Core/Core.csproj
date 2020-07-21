@@ -51,6 +51,7 @@
     <Compile Include="Config.cs" />
     <Compile Include="Analyzer.cs" />
     <Compile Include="AnalyzeValidator.cs" />
+    <Compile Include="AnlayzeReporter.cs" />
     <Compile Include="DataAnalyzer.cs" />
     <Compile Include="DataDownloader.cs" />
     <Compile Include="Worker.cs" />

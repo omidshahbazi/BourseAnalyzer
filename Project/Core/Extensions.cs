@@ -1,5 +1,6 @@
 ﻿using OfficeOpenXml;
 using System;
+using System.Globalization;
 
 namespace Core
 {
@@ -20,6 +21,13 @@ namespace Core
 		public static string ToDatabaseDateTime(this DateTime Self)
 		{
 			return Self.ToString("yyyy/MM/dd HH:mm:ss");
+		}
+
+		public static string ToPersianDateTime(this DateTime Self)
+		{
+			PersianCalendar persianCalendar = new PersianCalendar();
+
+			return string.Format("{0}/{1}/{2}", persianCalendar.GetYear(Self), persianCalendar.GetMonth(Self), persianCalendar.GetDayOfMonth(Self));
 		}
 	}
 }

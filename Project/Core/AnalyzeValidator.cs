@@ -17,7 +17,7 @@ namespace Core
 			if (CurrentDateTime.DayOfWeek == DayOfWeek.Saturday)
 				startTime = startTime.AddDays(-2);
 
-			DataTable analyzesData = Data.Database.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=@date", "date", startTime);
+			DataTable analyzesData = Data.Database.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=DATE(@date)", "date", startTime);
 			DataTable snapshotsData = Data.Database.QueryDataTable("SELECT stock_id, open, close FROM snapshots WHERE DATE(take_time)=DATE(UTC_TIMESTAMP())");
 
 			StringBuilder query = new StringBuilder();

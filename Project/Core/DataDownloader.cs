@@ -31,15 +31,11 @@ namespace Core
 
 		public static DataTable Download(DateTime Date)
 		{
-			PersianCalendar persianCalendar = new PersianCalendar();
-
-			string date = string.Format("{0}/{1}/{2}", persianCalendar.GetYear(Date), persianCalendar.GetMonth(Date), persianCalendar.GetDayOfMonth(Date));
-
 			byte[] data = null;
 
 			try
 			{
-				data = Requests.DownloadFile(END_POINT + date, 1000000);
+				data = Requests.DownloadFile(END_POINT + Date.ToPersianDateTime(), 1000000);
 			}
 			catch (Exception e)
 			{
