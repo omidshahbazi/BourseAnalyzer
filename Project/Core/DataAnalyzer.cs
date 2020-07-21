@@ -30,8 +30,10 @@ namespace Core
 
 			string dateTime = CurrentDateTime.ToDatabaseDateTime();
 
-			StringBuilder query = new StringBuilder();
+			int totalProcessCount = stocksTable.Rows.Count * Analyzers.Length;
+			int totalProcessedCount = 0;
 
+			StringBuilder query = new StringBuilder();
 			for (int i = 0; i < stocksTable.Rows.Count; ++i)
 			{
 				DataRow row = stocksTable.Rows[i];
@@ -49,9 +51,9 @@ namespace Core
 				{
 					var analyzer = Analyzers[j];
 
-					ConsoleHelper.WriteInfo("Analyzing {0}...", analyzer.Method.DeclaringType.Name);
-
 					Analyzer.Result result = analyzer(info);
+
+					ConsoleHelper.WriteInfo("Analyzing data {0}%", (int)(++totalProcessedCount / (float)totalProcessCount * 100));
 
 					if (result == null)
 						continue;

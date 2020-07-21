@@ -8,7 +8,7 @@ namespace Core
 {
 	public class Manager
 	{
-		private static readonly Worker[] workers = new Worker[] { new DataUpdater(), new AnalyzeValidator(), new DataAnalyzer(), new AnlayzeReporter() };
+		private static readonly Worker[] workers = new Worker[] { new DataUpdater(), new AnalyzeValidator(), new DataAnalyzer(), new AnalyzeReporter() };
 
 		public void Run()
 		{
