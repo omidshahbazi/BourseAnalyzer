@@ -1,5 +1,7 @@
-﻿using System;
+﻿using GameFramework.Common.Utilities;
+using System;
 using System.Data;
+using System.Drawing;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
@@ -9,7 +11,7 @@ namespace Core
 	public class AnalyzeReporter : Worker
 	{
 		private const string SUBJECT_TEMPLATE = "Suggested trades on {0}";
-		private const string BODY_TEMPLATE = "Suggested trades on {0}\n\n\n{1}";
+		private const string BODY_TEMPLATE = "<html><body>{0}</body></html>";
 
 		public override float WorkHour
 		{
@@ -30,22 +32,39 @@ namespace Core
 			DataTable sellAnalyzeData = analyzeData.DefaultView.ToTable();
 
 			StringBuilder buyText = new StringBuilder();
-			buyText.AppendLine("Should Buy:");
+
+			HTMLGenerator.BeginHeader2(buyText, Color.Green);
+			HTMLGenerator.WriteContent(buyText, "Should Buy:");
+			HTMLGenerator.EndHeader2(buyText);
+
+			BeginTable(buyText);
+
 			for (int i = 0; i < buyAnalyzeData.Rows.Count; ++i)
 			{
 				DataRow row = buyAnalyzeData.Rows[i];
 
-				buyText.Append(i + 1);
-				buyText.Append(". ");
-				buyText.Append(row["name"]);
-				buyText.Append(" (");
-				buyText.Append(row["symbol"]);
-				buyText.AppendLine(")");
+				HTMLGenerator.BeginTableRow(buyText);
+				HTMLGenerator.BeginTableData(buyText);
+				HTMLGenerator.WriteContent(buyText, i + 1);
+				HTMLGenerator.EndTableData(buyText);
+				HTMLGenerator.BeginTableData(buyText);
+				HTMLGenerator.WriteContent(buyText, row["name"]);
+				HTMLGenerator.EndTableData(buyText);
+				HTMLGenerator.BeginTableData(buyText);
+				HTMLGenerator.WriteContent(buyText, row["symbol"]);
+				HTMLGenerator.EndTableData(buyText);
+				HTMLGenerator.EndTableRow(buyText);
 			}
+
+			HTMLGenerator.EndTable(buyText);
 
 			for (int i = 0; i < tradersData.Rows.Count; ++i)
 			{
-				StringBuilder sellText = new StringBuilder();
+				StringBuilder emailBody = new StringBuilder();
+
+				HTMLGenerator.BeginHeader2(emailBody, Color.Blue);
+				HTMLGenerator.WriteContent(emailBody, "Suggested trades on {0}", CurrentDateTime.ToPersianDateTime());
+				HTMLGenerator.EndHeader2(emailBody);
 
 				DataRow traderRow = tradersData.Rows[i];
 
@@ -58,7 +77,11 @@ namespace Core
 				tradesData.DefaultView.RowFilter = "trader_id=" + Convert.ToInt32(traderRow["id"]);
 				if (tradesData.DefaultView.Count != 0)
 				{
-					sellText.AppendLine("Should Sell:");
+					HTMLGenerator.BeginHeader2(emailBody, Color.Red);
+					HTMLGenerator.WriteContent(emailBody, "Should Sell:");
+					HTMLGenerator.EndHeader2(emailBody);
+
+					BeginTable(emailBody);
 
 					for (int j = 0; j < tradesData.DefaultView.Count; ++j)
 					{
@@ -70,32 +93,57 @@ namespace Core
 						sellAnalyzeData.DefaultView.RowFilter = "stock_id=" + tradeRow["stock_id"];
 						if (sellAnalyzeData.DefaultView.Count != 0)
 						{
-							sellText.Append(++sellCount);
-							sellText.Append(". ");
-							sellText.Append(sellAnalyzeData.DefaultView[0]["name"]);
-							sellText.Append(" (");
-							sellText.Append(sellAnalyzeData.DefaultView[0]["symbol"]);
-							sellText.AppendLine(")");
+							HTMLGenerator.BeginTableRow(emailBody);
+							HTMLGenerator.BeginTableData(emailBody);
+							HTMLGenerator.WriteContent(emailBody, ++sellCount);
+							HTMLGenerator.EndTableData(emailBody);
+							HTMLGenerator.BeginTableData(emailBody);
+							HTMLGenerator.WriteContent(emailBody, sellAnalyzeData.DefaultView[0]["name"]);
+							HTMLGenerator.EndTableData(emailBody);
+							HTMLGenerator.BeginTableData(emailBody);
+							HTMLGenerator.WriteContent(emailBody, sellAnalyzeData.DefaultView[0]["symbol"]);
+							HTMLGenerator.EndTableData(emailBody);
+							HTMLGenerator.EndTableRow(emailBody);
 						}
 					}
+
+					HTMLGenerator.EndTable(emailBody);
 				}
 
-				SendEmail(traderRow["name"].ToString(), emailAddress, (sellCount == 0 ? "" : sellText.ToString()) + buyText.ToString(), CurrentDateTime);
+				SendEmail(traderRow["name"].ToString(), emailAddress, emailBody.ToString() + buyText.ToString(), CurrentDateTime);
 			}
 
 			return true;
 		}
 
-		private static bool SendEmail(string Name, string Email, string Body, DateTime Date)
+		private static void BeginTable(StringBuilder Builder)
+		{
+			HTMLGenerator.BeginTable(Builder);
+			HTMLGenerator.BeginTableHeader(Builder);
+			HTMLGenerator.BeginTableRow(Builder);
+			HTMLGenerator.BeginTableData(Builder);
+			HTMLGenerator.WriteContent(Builder, "No.");
+			HTMLGenerator.EndTableData(Builder);
+			HTMLGenerator.BeginTableData(Builder);
+			HTMLGenerator.WriteContent(Builder, "Name");
+			HTMLGenerator.EndTableData(Builder);
+			HTMLGenerator.BeginTableData(Builder);
+			HTMLGenerator.WriteContent(Builder, "Symbol");
+			HTMLGenerator.EndTableData(Builder);
+			HTMLGenerator.EndTableRow(Builder);
+			HTMLGenerator.EndTableHeader(Builder);
+		}
+
+		private static bool SendEmail(string Name, string Email, string HTMLBody, DateTime Date)
 		{
 			MailMessage message = new MailMessage();
 			message.From = new MailAddress(ConfigManager.Config.AnalyzeReporter.Username, "Bourse Analyzer");
 			message.To.Add(new MailAddress(Email, Name));
 
-			string date = Date.AddDays(1).ToPersianDateTime();
+			message.Subject = string.Format(SUBJECT_TEMPLATE, Date.AddDays(1).ToPersianDateTime());
+			message.Body = string.Format(BODY_TEMPLATE, HTMLBody);
 
-			message.Subject = string.Format(SUBJECT_TEMPLATE, date);
-			message.Body = string.Format(BODY_TEMPLATE, date, Body);
+			message.IsBodyHtml = true;
 
 			SmtpClient client = new SmtpClient(ConfigManager.Config.AnalyzeReporter.Host, ConfigManager.Config.AnalyzeReporter.Port);
 			client.UseDefaultCredentials = false;
