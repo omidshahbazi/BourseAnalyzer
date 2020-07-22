@@ -52,7 +52,7 @@ namespace Core
 					DataTable tempData = data.DefaultView.ToTable();
 					tempData.Columns.Add("rsi");
 
-					int startIndex = ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.HistoryCount - 1;
+					int startIndex = tempData.Rows.Count - rsiTable.Rows.Count;
 
 					for (int i = 0; i < rsiTable.Rows.Count; ++i)
 					{
