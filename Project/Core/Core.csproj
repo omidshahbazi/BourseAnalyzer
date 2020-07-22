@@ -48,8 +48,9 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analyzer_RelativeStrengthIndex.cs" />
     <Compile Include="Data.cs" />
-    <Compile Include="Config.cs" />
+    <Compile Include="ConfigManager.cs" />
     <Compile Include="Analyzer.cs" />
     <Compile Include="AnalyzeValidator.cs" />
     <Compile Include="AnalyzeReporter.cs" />

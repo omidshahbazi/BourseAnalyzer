@@ -9,13 +9,6 @@ namespace Core
 		public float WorkHour;
 	}
 
-	public struct TrendLineConfig
-	{
-		public int LongTermSeconds;
-		public float ShortTermInfiltrate;
-		public float LongTermInfiltrate;
-	}
-
 	public struct RelativeStrengthIndexConfig
 	{
 		public int HistoryCount;
@@ -23,13 +16,15 @@ namespace Core
 		public float LowRSI;
 		public float MidRSI;
 		public float HighRSI;
+
+		public bool WriteToCSV;
+		public string CSVPath;
 	}
 
 	public struct DataAnalyzerConfig
 	{
 		public float WorkHour;
 
-		public TrendLineConfig TrendLine;
 		public RelativeStrengthIndexConfig RelativeStrengthIndex;
 	}
 
