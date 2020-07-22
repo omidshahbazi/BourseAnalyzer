@@ -13,14 +13,12 @@ namespace Core
 
 			public DataTable HistoryData;
 			public DataTable LiveData;
-			public DataTable AnalyzesData;
 		}
 
 		public class Result
 		{
 			public int Action;
 			public double Worthiness;
-			public int FirstSnapshotID;
 		}
 
 		public static class RelativeStrengthIndex
@@ -29,9 +27,9 @@ namespace Core
 
 			private const float MAX_RSI = 1;
 
-			private static int MaxHistoryCount
+			private static int HistoryCount
 			{
-				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.MaxHistoryCount; }
+				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.HistoryCount; }
 			}
 
 			private static int CalclationCount
@@ -59,7 +57,7 @@ namespace Core
 				DataTable data = Info.HistoryData;
 
 				DataTable rsiTable = GenerateRSIData(data);
-				if (rsiTable == null)
+				if (rsiTable == null || rsiTable.Rows.Count < 2)
 					return null;
 
 				int lastIndex = rsiTable.Rows.Count - 1;
@@ -77,6 +75,7 @@ namespace Core
 				else if (prevRSI <= MidRSI && MidRSI < currRSI)
 				{
 					action = 1;
+					worthiness = (currRSI - prevRSI) / MAX_RSI;
 				}
 				else if (HighRSI <= prevRSI && currRSI < HighRSI)
 				{
@@ -86,6 +85,7 @@ namespace Core
 				else if (MidRSI <= prevRSI && currRSI < MidRSI)
 				{
 					action = -1;
+					worthiness = (prevRSI - currRSI) / MAX_RSI;
 				}
 
 				//if (action == 1)
@@ -93,15 +93,17 @@ namespace Core
 				//else if (action == -1)
 				//	Console.WriteLine("Sell: {0} RSI: {1}% Worthiness: {2}%", Info.ID, (int)(currRSI * 100), (int)(worthiness * 100));
 
-				return new Result() { Action = action, Worthiness = worthiness, FirstSnapshotID = Convert.ToInt32(data.Rows[data.Rows.Count - 1]["id"]) };
+				return new Result() { Action = action, Worthiness = worthiness };
 			}
 
 			private static DataTable GenerateRSIData(DataTable Data)
 			{
-				int requiredCount = MaxHistoryCount + CalclationCount - 1;
-
-				if (Data.Rows.Count < requiredCount)
+				if (Data.Rows.Count < HistoryCount)
 					return null;
+
+				int calculationCount = Math.Min(Data.Rows.Count - HistoryCount + 1, CalclationCount);
+
+				int requiredCount = HistoryCount + calculationCount - 1;
 
 				int startFromIndex = Data.Rows.Count - requiredCount;
 
@@ -125,26 +127,26 @@ namespace Core
 
 					rsiData.Rows.Add(gain, loss, 0);
 
-					if (i < MaxHistoryCount)
+					if (i < HistoryCount)
 					{
 						gainAvg += gain;
 						lossAvg += loss;
 					}
 				}
 
-				gainAvg /= MaxHistoryCount;
-				lossAvg /= MaxHistoryCount;
+				gainAvg /= HistoryCount;
+				lossAvg /= HistoryCount;
 
-				startFromIndex = rsiData.Rows.Count - CalclationCount;
+				startFromIndex = rsiData.Rows.Count - calculationCount;
 
 				rsiData.Rows[startFromIndex++]["rsi"] = CalculateRSI(gainAvg, lossAvg);
 
-				for (int i = 0; i < CalclationCount - 1; ++i)
+				for (int i = 0; i < calculationCount - 1; ++i)
 				{
 					DataRow row = rsiData.Rows[startFromIndex + i];
 
-					gainAvg = (gainAvg * (MaxHistoryCount - 1) + Convert.ToInt32(row["gain"])) / MaxHistoryCount;
-					lossAvg = (lossAvg * (MaxHistoryCount - 1) + Convert.ToInt32(row["loss"])) / MaxHistoryCount;
+					gainAvg = (gainAvg * (HistoryCount - 1) + Convert.ToInt32(row["gain"])) / HistoryCount;
+					lossAvg = (lossAvg * (HistoryCount - 1) + Convert.ToInt32(row["loss"])) / HistoryCount;
 
 					row["rsi"] = CalculateRSI(gainAvg, lossAvg);
 				}

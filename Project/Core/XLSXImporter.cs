@@ -76,9 +76,17 @@ namespace Core
 				builder.Append(',');
 				builder.Append(close);
 				builder.Append(");");
+
+				if ((i + 1) % 100 == 0)
+				{
+					Connection.Execute(builder.ToString());
+
+					builder = new StringBuilder();
+				}
 			}
 
-			Connection.Execute(builder.ToString());
+			if (builder.Length != 0)
+				Connection.Execute(builder.ToString());
 
 			return true;
 		}

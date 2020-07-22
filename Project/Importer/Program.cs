@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using Core;
@@ -42,7 +43,34 @@ namespace Importer
 				return;
 			}
 
+			if (arguments.Contains("download"))
+			{
+				if (!arguments.Contains("from"))
+					return;
+				if (!arguments.Contains("to"))
+					return;
+
+				DateTime from = arguments.Get<DateTime>("from");
+				DateTime to = arguments.Get<DateTime>("to");
+
+				for (DateTime curr = from; curr <= to; curr = curr.AddDays(1))
+				{
+					DataTable table = DataDownloader.Download(curr);
+
+					if (table == null)
+					{
+						curr = curr.AddDays(-1);
+						continue;
+					}
+
+					Import(table, curr);
+				}
+
+				return;
+			}
+
 			ConsoleHelper.WriteInfo("use -file for single file or -directory for multiple files");
+			ConsoleHelper.WriteInfo("use -download -from -to for download");
 		}
 
 		private static void Import(string FilePath)
@@ -54,11 +82,18 @@ namespace Importer
 				return;
 			}
 
+			ConsoleHelper.WriteInfo("Reading [{0}]...", FilePath);
+
 			byte[] stocksData = File.ReadAllBytes(FilePath);
 
-			ConsoleHelper.WriteInfo("Importing [{0}] for {1}...", FilePath, dateTime);
+			Import(XLSXConverter.ToDataTable(stocksData), dateTime);
+		}
 
-			XLSXImporter.Import(Data.Database, dateTime.ToUniversalTime(), XLSXConverter.ToDataTable(stocksData));
+		public static void Import(DataTable StockData, DateTime Date)
+		{
+			ConsoleHelper.WriteInfo("Importing for {0}...", Date);
+
+			XLSXImporter.Import(Data.Database, Date.ToUniversalTime(), StockData);
 
 			ConsoleHelper.WriteInfo("Importing done");
 		}

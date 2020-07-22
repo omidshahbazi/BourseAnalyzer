@@ -24,10 +24,6 @@ namespace Core
 
 			DataTable stocksTable = Data.Database.QueryDataTable("SELECT id, symbol FROM stocks");
 
-			DataTable analyzesTable = Data.Database.QueryDataTable("SELECT stock_id, first_snapshot_id FROM analyzes WHERE DATE(analyze_time)<=DATE(@current_date) ORDER BY analyze_time LIMIT @count",
-				"count", stocksTable.Rows.Count,
-				"current_date", CurrentDateTime);
-
 			string dateTime = CurrentDateTime.ToDatabaseDateTime();
 
 			int totalProcessCount = stocksTable.Rows.Count * Analyzers.Length;
@@ -40,11 +36,11 @@ namespace Core
 
 				int id = Convert.ToInt32(row["id"]);
 
-				DataTable historyTable = Data.Database.QueryDataTable("SELECT id, take_time, count, volume, value, open, first, high, low, last, close, UNIX_TIMESTAMP(take_time) - UNIX_TIMESTAMP('2015/01/01') relative_time FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
+				DataTable historyTable = Data.Database.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close, UNIX_TIMESTAMP(take_time) - UNIX_TIMESTAMP('2015/01/01') relative_time FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
 					"stock_id", id,
 					"current_date", CurrentDateTime);
 
-				Analyzer.Info info = new Analyzer.Info { ID = id, Symbol = row["symbol"].ToString(), HistoryData = historyTable, LiveData = liveTable, AnalyzesData = analyzesTable };
+				Analyzer.Info info = new Analyzer.Info { ID = id, Symbol = row["symbol"].ToString(), HistoryData = historyTable, LiveData = liveTable };
 
 				Analyzer.Result finalResult = null;
 				for (int j = 0; j < Analyzers.Length; ++j)
@@ -63,7 +59,7 @@ namespace Core
 
 				if (finalResult != null && finalResult.Action != 0)
 				{
-					query.Append("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness, first_snapshot_id) VALUES(");
+					query.Append("INSERT INTO analyzes(stock_id, analyze_time, analyze_time, action, worthiness) VALUES(");
 					query.Append(id);
 					query.Append(",'");
 					query.Append(dateTime);
@@ -71,14 +67,12 @@ namespace Core
 					query.Append(finalResult.Action);
 					query.Append(',');
 					query.Append(finalResult.Worthiness);
-					query.Append(',');
-					query.Append(finalResult.FirstSnapshotID);
 					query.Append(");");
 				}
 			}
 
-			if (query.Length != 0)
-				Data.Database.Execute(query.ToString());
+			//if (query.Length != 0)
+			//	Data.Database.Execute(query.ToString());
 
 			return true;
 		}
