@@ -20,6 +20,10 @@ namespace Core
 
 		public override bool Do(DateTime CurrentDateTime)
 		{
+			DateTime actionTime = CurrentDateTime.AddDays(1);
+			if (actionTime.DayOfWeek == DayOfWeek.Thursday)
+				actionTime = actionTime.AddDays(2);
+
 			DataTable tradersData = Data.Database.QueryDataTable("SELECT id, name, email FROM traders");
 			DataTable tradesData = Data.Database.QueryDataTable("SELECT trader_id, stock_id, SUM(count * action) count FROM trades WHERE DATE(action_time)<=DATE(@time) GROUP BY trader_id, stock_id", "time", CurrentDateTime);
 			DataTable analyzeData = Data.Database.QueryDataTable("SELECT s.id stock_id, s.name, s.symbol, a.action, a.worthiness FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id WHERE DATE(analyze_time)=DATE(@time)", "time", CurrentDateTime);
@@ -63,7 +67,7 @@ namespace Core
 				StringBuilder emailBody = new StringBuilder();
 
 				HTMLGenerator.BeginHeader2(emailBody, Color.Blue);
-				HTMLGenerator.WriteContent(emailBody, "Suggested trades on {0}", CurrentDateTime.ToPersianDateTime());
+				HTMLGenerator.WriteContent(emailBody, "Suggested trades on {0}", actionTime.ToPersianDateTime());
 				HTMLGenerator.EndHeader2(emailBody);
 
 				DataRow traderRow = tradersData.Rows[i];
@@ -110,7 +114,7 @@ namespace Core
 					HTMLGenerator.EndTable(emailBody);
 				}
 
-				SendEmail(traderRow["name"].ToString(), emailAddress, emailBody.ToString() + buyText.ToString(), CurrentDateTime);
+				SendEmail(traderRow["name"].ToString(), emailAddress, emailBody.ToString() + buyText.ToString(), actionTime);
 			}
 
 			return true;
@@ -140,7 +144,7 @@ namespace Core
 			message.From = new MailAddress(ConfigManager.Config.AnalyzeReporter.Username, "Bourse Analyzer");
 			message.To.Add(new MailAddress(Email, Name));
 
-			message.Subject = string.Format(SUBJECT_TEMPLATE, Date.AddDays(1).ToPersianDateTime());
+			message.Subject = string.Format(SUBJECT_TEMPLATE, Date.ToPersianDateTime());
 			message.Body = string.Format(BODY_TEMPLATE, HTMLBody);
 
 			message.IsBodyHtml = true;

@@ -71,8 +71,8 @@ namespace Core
 				}
 			}
 
-			//if (query.Length != 0)
-			//	Data.Database.Execute(query.ToString());
+			if (query.Length != 0)
+				Data.Database.Execute(query.ToString());
 
 			return true;
 		}

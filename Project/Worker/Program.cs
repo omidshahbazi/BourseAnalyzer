@@ -2,7 +2,6 @@
 
 namespace Worker
 {
-	//TOOD: add more indicators
 	//TODO: create client
 	class Program
 	{
