@@ -62,10 +62,11 @@ namespace Core
 					}
 
 					string path = Path.GetFullPath(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CSVPath);
+					path = Path.Combine(path, Info.DateTime.ToPersianDateTime().Replace('/', '-'));
 					if (!Directory.Exists(path))
 						Directory.CreateDirectory(path);
 
-					path += Info.DateTime.ToPersianDateTime().Replace('/', '-') + "_" + Info.ID + "_" + Info.Symbol + ".csv";
+					path = Path.Combine(path, Info.ID + "_" + Info.Symbol + ".csv");
 
 					StringBuilder builder = new StringBuilder();
 					CSVWriter.Write(builder, 0, 0, tempData);
