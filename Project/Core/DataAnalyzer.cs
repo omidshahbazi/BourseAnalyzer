@@ -54,7 +54,8 @@ namespace Core
 					ConsoleHelper.WriteInfo("Analyzing data {0}%", (int)(++totalProcessedCount / (float)totalProcessCount * 100));
 				}
 
-				worthiness /= availableResultCount;
+				if (availableResultCount != 0)
+					worthiness /= availableResultCount;
 
 				if (worthiness != 0)
 				{
