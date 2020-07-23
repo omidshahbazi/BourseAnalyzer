@@ -36,7 +36,7 @@ namespace Core
 
 				Analyzer.Info info = new Analyzer.Info { DateTime = CurrentDateTime, ID = id, Symbol = row["symbol"].ToString(), HistoryData = historyTable };
 
-				double worthines = 0;
+				double worthiness = 0;
 				int availableResultCount = 0;
 				for (int j = 0; j < Analyzers.Length; ++j)
 				{
@@ -46,7 +46,7 @@ namespace Core
 
 					if (result != null)
 					{
-						worthines += result.Action * result.Worthiness;
+						worthiness += result.Action * result.Worthiness;
 
 						++availableResultCount;
 					}
@@ -54,18 +54,18 @@ namespace Core
 					ConsoleHelper.WriteInfo("Analyzing data {0}%", (int)(++totalProcessedCount / (float)totalProcessCount * 100));
 				}
 
-				worthines /= availableResultCount;
+				worthiness /= availableResultCount;
 
-				if (worthines != 0)
+				if (worthiness != 0)
 				{
 					query.Append("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness) VALUES(");
 					query.Append(id);
 					query.Append(",'");
 					query.Append(dateTime);
 					query.Append("',");
-					query.Append(Math.Sign(worthines));
+					query.Append(Math.Sign(worthiness));
 					query.Append(',');
-					query.Append(Math.Abs(worthines));
+					query.Append(Math.Abs(worthiness));
 					query.Append(");");
 				}
 			}
