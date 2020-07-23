@@ -58,8 +58,39 @@ namespace Core
 					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CSVPath, Info, tempData);
 				}
 
-				//return new Result() { Action = action, Worthiness = worthiness };
-				return null;
+				int lastIndex = chartData.Rows.Count - 1;
+
+				double lastMACD = Convert.ToDouble(chartData.Rows[lastIndex]["macd"]);
+				double lastSignal = Convert.ToDouble(chartData.Rows[lastIndex]["signal"]);
+
+				double prevMACD = Convert.ToDouble(chartData.Rows[lastIndex - 1]["macd"]);
+				double prevSignal = Convert.ToDouble(chartData.Rows[lastIndex - 1]["signal"]);
+
+				int action = 0;
+				double worthiness = 0;
+
+				if (prevMACD <= prevSignal && lastMACD >= lastSignal)
+				{
+					action = 1;
+					worthiness = 0.5F;
+				}
+				else if (prevMACD >= prevSignal && lastMACD <= lastSignal)
+				{
+					action = -1;
+					worthiness = 0.5F;
+				}
+				else if (prevMACD <= 0 && 0 <= lastMACD)
+				{
+					action = 1;
+					worthiness = 1;
+				}
+				else if (prevMACD >= 0 && 0 >= lastMACD)
+				{
+					action = -1;
+					worthiness = 1;
+				}
+
+				return new Result() { Action = action, Worthiness = worthiness };
 			}
 
 			private static DataTable GenerateData(DataTable Data)
