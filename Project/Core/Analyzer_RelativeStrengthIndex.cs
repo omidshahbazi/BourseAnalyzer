@@ -130,7 +130,7 @@ namespace Core
 					return null;
 				}
 
-				if (Data.Rows.Count < HistoryCount)
+				if (Data.Rows.Count < HistoryCount + 1)
 					return null;
 
 				int calculationCount = Math.Min(Data.Rows.Count - HistoryCount + 1, CalclationCount);
