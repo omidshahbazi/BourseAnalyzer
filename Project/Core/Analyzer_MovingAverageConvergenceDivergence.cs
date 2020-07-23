@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GameFramework.Common.Utilities;
+using System;
 using System.Data;
 
 namespace Core
@@ -38,26 +39,6 @@ namespace Core
 				if (chartData == null)
 					return null;
 
-				if (ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.WriteToCSV)
-				{
-					DataTable tempData = data.DefaultView.ToTable();
-					tempData.Columns.Add("macd");
-					tempData.Columns.Add("signal");
-
-					int startIndex = tempData.Rows.Count - chartData.Rows.Count;
-
-					for (int i = 0; i < chartData.Rows.Count; ++i)
-					{
-						DataRow chartRow = chartData.Rows[i];
-						DataRow tempDataRow = tempData.Rows[startIndex + i];
-
-						tempDataRow["macd"] = chartRow["macd"];
-						tempDataRow["signal"] = chartRow["signal"];
-					}
-
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CSVPath, Info, tempData);
-				}
-
 				int lastIndex = chartData.Rows.Count - 1;
 
 				double lastMACD = Convert.ToDouble(chartData.Rows[lastIndex]["macd"]);
@@ -90,21 +71,56 @@ namespace Core
 					worthiness = 1;
 				}
 
+				if (ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.WriteToCSV)
+				{
+					DataTable tempData = data.DefaultView.ToTable();
+					tempData.Columns.Add("macd");
+					tempData.Columns.Add("signal");
+
+					int startIndex = tempData.Rows.Count - chartData.Rows.Count;
+
+					for (int i = 0; i < chartData.Rows.Count; ++i)
+					{
+						DataRow chartRow = chartData.Rows[i];
+						DataRow tempDataRow = tempData.Rows[startIndex + i];
+
+						tempDataRow["macd"] = chartRow["macd"];
+						tempDataRow["signal"] = chartRow["signal"];
+					}
+
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CSVPath, Info, action, tempData);
+				}
+
 				return new Result() { Action = action, Worthiness = worthiness };
 			}
 
 			private static DataTable GenerateData(DataTable Data)
 			{
 				if (FastHistoryCount <= 0)
+				{
+					ConsoleHelper.WriteError("FastHistoryCount must be grater than 0, current value is {0}", FastHistoryCount);
 					return null;
+				}
 
-				if (SlowHistoryCount <= 0 || SlowHistoryCount < FastHistoryCount)
+				if (SlowHistoryCount <= 0)
+				{
+					ConsoleHelper.WriteError("SlowHistoryCount must be grater than 0, current value is {0}", SlowHistoryCount);
 					return null;
+				}
 
-				if (CalclationCount < 3)
+				if (SlowHistoryCount < FastHistoryCount)
+				{
+					ConsoleHelper.WriteError("SlowHistoryCount must be grater than FastHistoryCount, current values area {0}, {1}", SlowHistoryCount, FastHistoryCount);
 					return null;
+				}
 
-				int calculationCount = Math.Min(Math.Max(1, Data.Rows.Count - SlowHistoryCount - SignalHistoryCount), CalclationCount);
+				if (CalclationCount < 2)
+				{
+					ConsoleHelper.WriteError("CalclationCount must be grater than 1, current value is {0}", CalclationCount);
+					return null;
+				}
+
+				int calculationCount = Math.Min(Math.Max(2, Data.Rows.Count - SlowHistoryCount - SignalHistoryCount), CalclationCount);
 
 				int requiredCount = calculationCount + SlowHistoryCount + SignalHistoryCount;
 

@@ -47,34 +47,26 @@ namespace Core
 				DataTable data = Info.HistoryData;
 
 				if (LowRSI <= 0 || MidRSI <= LowRSI)
+				{
+					ConsoleHelper.WriteError("LowRSI must be grater than 0 and smaller than MidRSI, current value is {0}", LowRSI);
 					return null;
+				}
 
 				if (MidRSI <= LowRSI || HighRSI <= MidRSI)
+				{
+					ConsoleHelper.WriteError("MidRSI must be grater than LowRSI and smaller than HighRSI, current value is {0}", MidRSI);
 					return null;
+				}
 
 				if (HighRSI <= MidRSI || MaxRSI <= HighRSI)
+				{
+					ConsoleHelper.WriteError("HighRSI must be grater than MidRSI and smaller than MaxRSI, current value is {0}", HighRSI);
 					return null;
+				}
 
 				DataTable rsiTable = GenerateRSIData(data);
 				if (rsiTable == null)
 					return null;
-
-				if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.WriteToCSV)
-				{
-					DataTable tempData = data.DefaultView.ToTable();
-					tempData.Columns.Add("rsi");
-
-					int startIndex = tempData.Rows.Count - rsiTable.Rows.Count;
-
-					for (int i = 0; i < rsiTable.Rows.Count; ++i)
-					{
-						DataRow row = tempData.Rows[startIndex + i];
-
-						row["rsi"] = rsiTable.Rows[i]["rsi"];
-					}
-
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CSVPath, Info, tempData);
-				}
 
 				int lastIndex = rsiTable.Rows.Count - 1;
 				double prevRSI = Convert.ToDouble(rsiTable.Rows[lastIndex - 1]["rsi"]);
@@ -104,10 +96,22 @@ namespace Core
 					worthiness = (prevRSI - currRSI) / MaxRSI;
 				}
 
-				//if (action == 1)
-				//	Console.WriteLine("Buy: {0} RSI: {1}% Worthiness: {2}%", Info.ID, (int)(currRSI * 100), (int)(worthiness * 100));
-				//else if (action == -1)
-				//	Console.WriteLine("Sell: {0} RSI: {1}% Worthiness: {2}%", Info.ID, (int)(currRSI * 100), (int)(worthiness * 100));
+				if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.WriteToCSV)
+				{
+					DataTable tempData = data.DefaultView.ToTable();
+					tempData.Columns.Add("rsi");
+
+					int startIndex = tempData.Rows.Count - rsiTable.Rows.Count;
+
+					for (int i = 0; i < rsiTable.Rows.Count; ++i)
+					{
+						DataRow row = tempData.Rows[startIndex + i];
+
+						row["rsi"] = rsiTable.Rows[i]["rsi"];
+					}
+
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CSVPath, Info, action, tempData);
+				}
 
 				return new Result() { Action = action, Worthiness = worthiness };
 			}
@@ -115,10 +119,16 @@ namespace Core
 			private static DataTable GenerateRSIData(DataTable Data)
 			{
 				if (HistoryCount <= 0)
+				{
+					ConsoleHelper.WriteError("HistoryCount must be grater than 0, current value is {0}", HistoryCount);
 					return null;
+				}
 
 				if (CalclationCount < 2)
+				{
+					ConsoleHelper.WriteError("CalclationCount must be grater than 1, current value is {0}", CalclationCount);
 					return null;
+				}
 
 				if (Data.Rows.Count < HistoryCount)
 					return null;

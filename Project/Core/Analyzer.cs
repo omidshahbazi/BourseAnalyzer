@@ -25,10 +25,17 @@ namespace Core
 			public double Worthiness;
 		}
 
-		private static void WriteCSV(string Dir, Info Info, DataTable Data)
+		private static void WriteCSV(string Dir, Info Info, int Action, DataTable Data)
 		{
 			string path = Path.GetFullPath(Dir);
 			path = Path.Combine(path, Info.DateTime.ToPersianDateTime().Replace('/', '-'));
+
+			if (Action == -1)
+				path = Path.Combine(path, "Sell");
+			else if (Action == 0)
+				path = Path.Combine(path, "None");
+			else if (Action == 1)
+				path = Path.Combine(path, "Buy");
 
 			if (!Directory.Exists(path))
 				Directory.CreateDirectory(path);

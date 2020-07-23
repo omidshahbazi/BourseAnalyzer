@@ -29,7 +29,7 @@ namespace Core
 				DataRow row = stocksTable.Rows[i];
 
 				int id = Convert.ToInt32(row["id"]);
-
+				id = 198;
 				DataTable historyTable = Data.Database.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
 					"stock_id", id,
 					"current_date", CurrentDateTime);
