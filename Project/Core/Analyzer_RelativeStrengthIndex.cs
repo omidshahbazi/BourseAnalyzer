@@ -12,8 +12,6 @@ namespace Core
 		{
 			//https://blog.quantinsti.com/rsi-indicator/
 
-			private const float MAX_RSI = 1;
-
 			private static int HistoryCount
 			{
 				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.HistoryCount; }
@@ -39,12 +37,26 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.HighRSI; }
 			}
 
+			private static float MaxRSI
+			{
+				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.MaxRSI; }
+			}
+
 			public static Result Analyze(Info Info)
 			{
 				DataTable data = Info.HistoryData;
 
+				if (LowRSI <= 0 || MidRSI <= LowRSI)
+					return null;
+
+				if (MidRSI <= LowRSI || HighRSI <= MidRSI)
+					return null;
+
+				if (HighRSI <= MidRSI || MaxRSI <= HighRSI)
+					return null;
+
 				DataTable rsiTable = GenerateRSIData(data);
-				if (rsiTable == null || rsiTable.Rows.Count < 2)
+				if (rsiTable == null)
 					return null;
 
 				if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.WriteToCSV)
@@ -61,17 +73,7 @@ namespace Core
 						row["rsi"] = rsiTable.Rows[i]["rsi"];
 					}
 
-					string path = Path.GetFullPath(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CSVPath);
-					path = Path.Combine(path, Info.DateTime.ToPersianDateTime().Replace('/', '-'));
-					if (!Directory.Exists(path))
-						Directory.CreateDirectory(path);
-
-					path = Path.Combine(path, Info.ID + "_" + Info.Symbol + ".csv");
-
-					StringBuilder builder = new StringBuilder();
-					CSVWriter.Write(builder, 0, 0, tempData);
-
-					File.WriteAllText(path, builder.ToString());
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CSVPath, Info, tempData);
 				}
 
 				int lastIndex = rsiTable.Rows.Count - 1;
@@ -89,17 +91,17 @@ namespace Core
 				else if (prevRSI <= MidRSI && MidRSI < currRSI)
 				{
 					action = 1;
-					worthiness = (currRSI - prevRSI) / MAX_RSI;
+					worthiness = (currRSI - prevRSI) / MaxRSI;
 				}
 				else if (HighRSI <= prevRSI && currRSI < HighRSI)
 				{
 					action = -1;
-					worthiness = (prevRSI - HighRSI) / (MAX_RSI - HighRSI);
+					worthiness = (prevRSI - HighRSI) / (MaxRSI - HighRSI);
 				}
 				else if (MidRSI <= prevRSI && currRSI < MidRSI)
 				{
 					action = -1;
-					worthiness = (prevRSI - currRSI) / MAX_RSI;
+					worthiness = (prevRSI - currRSI) / MaxRSI;
 				}
 
 				//if (action == 1)
@@ -112,6 +114,12 @@ namespace Core
 
 			private static DataTable GenerateRSIData(DataTable Data)
 			{
+				if (HistoryCount <= 0)
+					return null;
+
+				if (CalclationCount < 2)
+					return null;
+
 				if (Data.Rows.Count < HistoryCount)
 					return null;
 
@@ -165,10 +173,10 @@ namespace Core
 					row["rsi"] = CalculateRSI(gainAvg, lossAvg);
 				}
 
-				rsiData.Columns.RemoveAt(0);
-				rsiData.Columns.RemoveAt(0);
+				rsiData.Columns.Remove("gain");
+				rsiData.Columns.Remove("loss");
 
-				for (int i = 1; i < startIndex; ++i)
+				for (int i = 0; i < HistoryCount - 1; ++i)
 					rsiData.Rows.RemoveAt(0);
 
 				return rsiData;
@@ -179,7 +187,7 @@ namespace Core
 				if (LossAverage == 0)
 					return 1;
 
-				return MAX_RSI - (MAX_RSI / (1 + (GainAverage / LossAverage)));
+				return MaxRSI - (MaxRSI / (1 + (GainAverage / LossAverage)));
 			}
 		}
 	}

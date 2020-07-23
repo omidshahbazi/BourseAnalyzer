@@ -4,38 +4,51 @@ using System.IO;
 
 namespace Core
 {
-	public struct DataUpdaterConfig
+	public class DataUpdaterConfig
 	{
-		public float WorkHour;
+		public float WorkHour = 13;
 	}
 
-	public struct RelativeStrengthIndexConfig
+	public class RelativeStrengthIndexConfig
 	{
-		public int HistoryCount;
-		public int CalclationCount;
-		public float LowRSI;
-		public float MidRSI;
-		public float HighRSI;
+		public int HistoryCount = 14;
+		public int CalclationCount = 90;
+		public float LowRSI = 0.3F;
+		public float MidRSI = 0.5F;
+		public float HighRSI = 0.7F;
+		public float MaxRSI = 1;
 
-		public bool WriteToCSV;
-		public string CSVPath;
+		public bool WriteToCSV = false;
+		public string CSVPath = "Output/RSI/";
 	}
 
-	public struct DataAnalyzerConfig
+	public class MovingAverageConvergenceDivergenceConfig
 	{
-		public float WorkHour;
+		public int SlowHistoryCount = 26;
+		public int FastHistoryCount = 12;
+		public int SignalHistoryCount = 9;
+		public int CalclationCount = 90;
 
-		public RelativeStrengthIndexConfig RelativeStrengthIndex;
+		public bool WriteToCSV = false;
+		public string CSVPath = "Output/MACD/";
 	}
 
-	public struct AnalyzeValidatorConfig
+	public class DataAnalyzerConfig
 	{
-		public float WorkHour;
+		public float WorkHour = 13;
+
+		public RelativeStrengthIndexConfig RelativeStrengthIndex = new RelativeStrengthIndexConfig();
+		public MovingAverageConvergenceDivergenceConfig MovingAverageConvergenceDivergence = new MovingAverageConvergenceDivergenceConfig();
 	}
 
-	public struct AnalyzeReporterConfig
+	public class AnalyzeValidatorConfig
 	{
-		public float WorkHour;
+		public float WorkHour = 13;
+	}
+
+	public class AnalyzeReporterConfig
+	{
+		public float WorkHour = 13;
 
 		public string Host;
 		public ushort Port;
@@ -43,16 +56,16 @@ namespace Core
 		public string Password;
 	}
 
-	public struct Config
+	public class Config
 	{
 		public Database.CreateInfo DatabaseConnection;
 
-		public int CheckSchedulesPeriod;
+		public int CheckSchedulesPeriod = 60;
 
-		public DataUpdaterConfig DataUpdater;
-		public DataAnalyzerConfig DataAnalyzer;
-		public AnalyzeValidatorConfig AnalyzeValidator;
-		public AnalyzeReporterConfig AnalyzeReporter;
+		public DataUpdaterConfig DataUpdater = new DataUpdaterConfig();
+		public DataAnalyzerConfig DataAnalyzer = new DataAnalyzerConfig();
+		public AnalyzeValidatorConfig AnalyzeValidator = new AnalyzeValidatorConfig();
+		public AnalyzeReporterConfig AnalyzeReporter = new AnalyzeReporterConfig();
 	}
 
 	public static class ConfigManager
@@ -70,6 +83,8 @@ namespace Core
 			string path = Path.GetFullPath(FILE_NAME);
 			if (!File.Exists(path))
 			{
+				Config = new Config();
+
 				File.WriteAllText(path, Creator.Serialize<ISerializeObject>(Config).Content);
 				return;
 			}

@@ -48,7 +48,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Analyzer_.cs" />
+    <Compile Include="Analyzer_MovingAverageConvergenceDivergence.cs" />
     <Compile Include="Analyzer_RelativeStrengthIndex.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="ConfigManager.cs" />
