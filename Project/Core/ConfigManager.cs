@@ -12,7 +12,7 @@ namespace Core
 	public class RelativeStrengthIndexConfig
 	{
 		public int HistoryCount = 14;
-		public int CalclationCount = 90;
+		public int CalculationCount = 90;
 		public float LowRSI = 0.3F;
 		public float MidRSI = 0.5F;
 		public float HighRSI = 0.7F;
@@ -27,7 +27,17 @@ namespace Core
 		public int SlowHistoryCount = 26;
 		public int FastHistoryCount = 12;
 		public int SignalHistoryCount = 9;
-		public int CalclationCount = 90;
+		public int CalculationCount = 90;
+
+		public bool WriteToCSV = false;
+		public string CSVPath = "Output/MACD/";
+	}
+
+	public class SimpleMovingAverageConfig
+	{
+		public int[] HistoryCount = new int[] { 14, 31 };
+		public int FastHistoryCount = 40;
+		public int CalculationCount = 90;
 
 		public bool WriteToCSV = false;
 		public string CSVPath = "Output/MACD/";
@@ -39,6 +49,7 @@ namespace Core
 
 		public RelativeStrengthIndexConfig RelativeStrengthIndex = new RelativeStrengthIndexConfig();
 		public MovingAverageConvergenceDivergenceConfig MovingAverageConvergenceDivergence = new MovingAverageConvergenceDivergenceConfig();
+		public SimpleMovingAverageConfig SimpleMovingAverage = new SimpleMovingAverageConfig();
 	}
 
 	public class AnalyzeValidatorConfig

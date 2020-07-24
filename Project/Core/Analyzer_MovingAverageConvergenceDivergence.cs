@@ -26,9 +26,9 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.SignalHistoryCount; }
 			}
 
-			private static int CalclationCount
+			private static int CalculationCount
 			{
-				get { return ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CalclationCount; }
+				get { return ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CalculationCount; }
 			}
 
 			public static Result Analyze(Info Info)
@@ -42,9 +42,9 @@ namespace Core
 				int lastIndex = chartData.Rows.Count - 1;
 
 				double lastMACD = Convert.ToDouble(chartData.Rows[lastIndex]["macd"]);
-				double lastSignal = Convert.ToDouble(chartData.Rows[lastIndex]["signal"]);
-
 				double prevMACD = Convert.ToDouble(chartData.Rows[lastIndex - 1]["macd"]);
+
+				double lastSignal = Convert.ToDouble(chartData.Rows[lastIndex]["signal"]);
 				double prevSignal = Convert.ToDouble(chartData.Rows[lastIndex - 1]["signal"]);
 
 				int action = 0;
@@ -114,13 +114,13 @@ namespace Core
 					return null;
 				}
 
-				if (CalclationCount < 2)
+				if (CalculationCount < 2)
 				{
-					ConsoleHelper.WriteError("CalclationCount must be grater than 1, current value is {0}", CalclationCount);
+					ConsoleHelper.WriteError("CalculationCount must be grater than 1, current value is {0}", CalculationCount);
 					return null;
 				}
 
-				int calculationCount = Math.Min(Math.Max(2, Data.Rows.Count - SlowHistoryCount - SignalHistoryCount), CalclationCount);
+				int calculationCount = Math.Min(Math.Max(2, Data.Rows.Count - SlowHistoryCount - SignalHistoryCount), CalculationCount);
 
 				int requiredCount = calculationCount + SlowHistoryCount + SignalHistoryCount;
 

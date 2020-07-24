@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Analyzer_MovingAverageConvergenceDivergence.cs" />
+    <Compile Include="Analyzer_SimpleMovingAverage.cs" />
     <Compile Include="Analyzer_RelativeStrengthIndex.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="ConfigManager.cs" />

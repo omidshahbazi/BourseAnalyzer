@@ -1,8 +1,6 @@
 ﻿using GameFramework.Common.Utilities;
 using System;
 using System.Data;
-using System.IO;
-using System.Text;
 
 namespace Core
 {
@@ -17,9 +15,9 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.HistoryCount; }
 			}
 
-			private static int CalclationCount
+			private static int CalculationCount
 			{
-				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CalclationCount; }
+				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CalculationCount; }
 			}
 
 			private static float LowRSI
@@ -64,13 +62,13 @@ namespace Core
 					return null;
 				}
 
-				DataTable rsiTable = GenerateRSIData(data);
-				if (rsiTable == null)
+				DataTable rsiData = GenerateRSIData(data);
+				if (rsiData == null)
 					return null;
 
-				int lastIndex = rsiTable.Rows.Count - 1;
-				double prevRSI = Convert.ToDouble(rsiTable.Rows[lastIndex - 1]["rsi"]);
-				double currRSI = Convert.ToDouble(rsiTable.Rows[lastIndex]["rsi"]);
+				int lastIndex = rsiData.Rows.Count - 1;
+				double prevRSI = Convert.ToDouble(rsiData.Rows[lastIndex - 1]["rsi"]);
+				double currRSI = Convert.ToDouble(rsiData.Rows[lastIndex]["rsi"]);
 
 				int action = 0;
 				double worthiness = 0;
@@ -101,13 +99,13 @@ namespace Core
 					DataTable tempData = data.DefaultView.ToTable();
 					tempData.Columns.Add("rsi");
 
-					int startIndex = tempData.Rows.Count - rsiTable.Rows.Count;
+					int startIndex = tempData.Rows.Count - rsiData.Rows.Count;
 
-					for (int i = 0; i < rsiTable.Rows.Count; ++i)
+					for (int i = 0; i < rsiData.Rows.Count; ++i)
 					{
 						DataRow row = tempData.Rows[startIndex + i];
 
-						row["rsi"] = rsiTable.Rows[i]["rsi"];
+						row["rsi"] = rsiData.Rows[i]["rsi"];
 					}
 
 					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CSVPath, Info, action, tempData);
@@ -124,18 +122,18 @@ namespace Core
 					return null;
 				}
 
-				if (CalclationCount < 2)
+				if (CalculationCount < 2)
 				{
-					ConsoleHelper.WriteError("CalclationCount must be grater than 1, current value is {0}", CalclationCount);
+					ConsoleHelper.WriteError("CalculationCount must be grater than 1, current value is {0}", CalculationCount);
 					return null;
 				}
 
 				if (Data.Rows.Count < HistoryCount + 1)
 					return null;
 
-				int calculationCount = Math.Min(Data.Rows.Count - HistoryCount + 1, CalclationCount);
-
-				int requiredCount = HistoryCount + calculationCount - 1;
+				int calculationCount = Math.Min(Data.Rows.Count - HistoryCount + 1, CalculationCount);
+			
+				int requiredCount = HistoryCount - 1 + calculationCount;
 
 				int startIndex = Data.Rows.Count - requiredCount;
 
