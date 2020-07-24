@@ -35,12 +35,20 @@ namespace Core
 			analyzeData.DefaultView.RowFilter = "action=-1";
 			DataTable sellAnalyzeData = analyzeData.DefaultView.ToTable();
 
+			HTMLGenerator.Style = new HTMLGenerator.HTMLStyle();
+
+			Font font = new Font("Calibri", 18);
+
 			StringBuilder fullBuyText = new StringBuilder();
 			{
-				HTMLGenerator.BeginHeader2(fullBuyText, Color.Green);
+				HTMLGenerator.Style.Color = Color.Green;
+				HTMLGenerator.Style.Font = null;
+				HTMLGenerator.BeginHeader2(fullBuyText);
+				HTMLGenerator.Style.Color = Color.Black;
 				HTMLGenerator.WriteContent(fullBuyText, "Full Buy Report:");
 				HTMLGenerator.EndHeader2(fullBuyText);
 
+				HTMLGenerator.Style.Font = font;
 				BeginTable(fullBuyText);
 
 				for (int i = 0; i < buyAnalyzeData.Rows.Count; ++i)
@@ -64,14 +72,18 @@ namespace Core
 				}
 
 				HTMLGenerator.EndTable(fullBuyText);
+				HTMLGenerator.Style.Font = null;
 			}
 
 			StringBuilder fullSellText = new StringBuilder();
 			{
-				HTMLGenerator.BeginHeader2(fullSellText, Color.Red);
+				HTMLGenerator.Style.Color = Color.Red;
+				HTMLGenerator.BeginHeader2(fullSellText);
+				HTMLGenerator.Style.Color = Color.Black;
 				HTMLGenerator.WriteContent(fullSellText, "Full Sell Report:");
 				HTMLGenerator.EndHeader2(fullSellText);
 
+				HTMLGenerator.Style.Font = font;
 				BeginTable(fullSellText);
 
 				for (int i = 0; i < sellAnalyzeData.Rows.Count; ++i)
@@ -95,13 +107,16 @@ namespace Core
 				}
 
 				HTMLGenerator.EndTable(fullBuyText);
+				HTMLGenerator.Style.Font = null;
 			}
 
 			for (int i = 0; i < tradersData.Rows.Count; ++i)
 			{
 				StringBuilder emailBody = new StringBuilder();
 
-				HTMLGenerator.BeginHeader2(emailBody, Color.Blue);
+				HTMLGenerator.Style.Color = Color.Blue;
+				HTMLGenerator.BeginHeader2(emailBody);
+				HTMLGenerator.Style.Color = Color.Black;
 				HTMLGenerator.WriteContent(emailBody, "Suggested trades on {0}", actionTime.ToPersianDateTime());
 				HTMLGenerator.EndHeader2(emailBody);
 
@@ -116,11 +131,14 @@ namespace Core
 				tradesData.DefaultView.RowFilter = "trader_id=" + Convert.ToInt32(traderRow["id"]);
 				if (tradesData.DefaultView.Count != 0)
 				{
-					HTMLGenerator.BeginHeader2(emailBody, Color.Red);
+					HTMLGenerator.Style.Color = Color.Red;
+					HTMLGenerator.BeginHeader2(emailBody);
+					HTMLGenerator.Style.Color = Color.Black;
 					HTMLGenerator.WriteContent(emailBody, "Should Sell:");
 					HTMLGenerator.EndHeader2(emailBody);
 
 					{
+						HTMLGenerator.Style.Font = font;
 						BeginTable(emailBody);
 
 						for (int j = 0; j < tradesData.DefaultView.Count; ++j)
@@ -153,6 +171,7 @@ namespace Core
 						}
 
 						HTMLGenerator.EndTable(emailBody);
+						HTMLGenerator.Style.Font = null;
 					}
 				}
 
