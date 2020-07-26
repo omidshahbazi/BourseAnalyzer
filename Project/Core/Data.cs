@@ -1,6 +1,8 @@
-﻿using GameFramework.DatabaseManaged;
+﻿using GameFramework.Common.Utilities;
+using GameFramework.DatabaseManaged;
 using GameFramework.DatabaseManaged.Migration;
 using System;
+using System.Data;
 
 namespace Core
 {
@@ -22,7 +24,8 @@ namespace Core
 			MIGRATION_BOURSE_2020072004,
 			MIGRATION_BOURSE_2020072005,
 			MIGRATION_BOURSE_2020072101,
-			MIGRATION_BOURSE_2020072301 };
+			MIGRATION_BOURSE_2020072301,
+			MIGRATION_BOURSE_2020072601 };
 
 		private static readonly string[] MIGRATIONS_NAME = new string[] {
 			"Migration_Bourse_2020071101",
@@ -40,7 +43,8 @@ namespace Core
 			"Migration_Bourse_2020072004",
 			"Migration_Bourse_2020072005",
 			"Migration_Bourse_2020072101",
-			"Migration_Bourse_2020072301" };
+			"Migration_Bourse_2020072301",
+			"Migration_Bourse_2020072601" };
 
 		private const string MIGRATION_BOURSE_2020071101 = @"
 			CREATE TABLE `stocks` (
@@ -213,6 +217,10 @@ namespace Core
 			ALTER TABLE `traders` 
 			ADD COLUMN `send_full_sell_report` INT NOT NULL AFTER `email`;";
 
+		private const string MIGRATION_BOURSE_2020072601 = @"
+			ALTER TABLE `traders` 
+			CHANGE COLUMN `email` `emails` TEXT NOT NULL ;";
+
 		public static Database Database
 		{
 			get;
@@ -221,9 +229,7 @@ namespace Core
 
 		static Data()
 		{
-			Config conf = ConfigManager.Config;
-
-			Database = new MySQLDatabase(conf.DatabaseConnection);
+			CreateConnection();
 
 			Func<string, string> migrationLoader = (string Name) =>
 			{
@@ -231,6 +237,34 @@ namespace Core
 			};
 
 			MigrationManager.Migrate(Database, MIGRATIONS_NAME, migrationLoader);
+		}
+
+		public static void Execute(string Query, params object[] Parameters)
+		{
+			Database.Execute(Query, Parameters);
+		}
+
+		public static DataTable QueryDataTable(string Query, params object[] Parameters)
+		{
+			try
+			{
+				return Database.QueryDataTable(Query, Parameters);
+			}
+			catch (Exception e)
+			{
+				ConsoleHelper.WriteException(e, "QueryDataTable has failed");
+			}
+
+			CreateConnection();
+
+			return QueryDataTable(Query, Parameters);
+		}
+
+		private static void CreateConnection()
+		{
+			Config conf = ConfigManager.Config;
+
+			Database = new MySQLDatabase(conf.DatabaseConnection);
 		}
 	}
 }

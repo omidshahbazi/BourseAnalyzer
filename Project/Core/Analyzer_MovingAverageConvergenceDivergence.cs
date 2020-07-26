@@ -50,22 +50,26 @@ namespace Core
 				int action = 0;
 				double worthiness = 0;
 
-				if (prevMACD <= prevSignal && lastMACD >= lastSignal)
+				if ((prevMACD <= prevSignal && lastMACD > lastSignal) ||
+					(prevMACD < prevSignal && lastMACD >= lastSignal))
 				{
 					action = 1;
 					worthiness = 0.5F;
 				}
-				else if (prevMACD >= prevSignal && lastMACD <= lastSignal)
+				else if ((prevMACD >= prevSignal && lastMACD < lastSignal) ||
+						 (prevMACD > prevSignal && lastMACD <= lastSignal))
 				{
 					action = -1;
 					worthiness = 0.5F;
 				}
-				else if (prevMACD <= 0 && 0 <= lastMACD)
+				else if ((prevMACD <= 0 && 0 < lastMACD) ||
+						 (prevMACD < 0 && 0 <= lastMACD))
 				{
 					action = 1;
 					worthiness = 1;
 				}
-				else if (prevMACD >= 0 && 0 >= lastMACD)
+				else if ((prevMACD >= 0 && 0 > lastMACD) ||
+					 	 (prevMACD > 0 && 0 >= lastMACD))
 				{
 					action = -1;
 					worthiness = 1;

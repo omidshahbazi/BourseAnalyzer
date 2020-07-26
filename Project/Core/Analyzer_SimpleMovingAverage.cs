@@ -50,12 +50,14 @@ namespace Core
 						double lastLongSMA = Convert.ToDouble(longTermData.Rows[lastIndex]["sma"]);
 						double prevLongSMA = Convert.ToDouble(longTermData.Rows[lastIndex - 1]["sma"]);
 
-						if (prevShortSMA <= prevLongSMA && lastShortSMA >= lastLongSMA)
+						if ((prevShortSMA <= prevLongSMA && lastShortSMA > lastLongSMA) ||
+							(prevShortSMA < prevLongSMA && lastShortSMA >= lastLongSMA))
 						{
 							action = 1;
 							worthiness = 1;
 						}
-						else if (prevShortSMA >= prevLongSMA && lastShortSMA <= lastLongSMA)
+						else if ((prevShortSMA >= prevLongSMA && lastShortSMA < lastLongSMA) ||
+								 (prevShortSMA > prevLongSMA && lastShortSMA <= lastLongSMA))
 						{
 							action = -1;
 							worthiness = 1;

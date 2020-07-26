@@ -16,7 +16,7 @@ namespace Core
 
 		public override bool Do(DateTime CurrentDateTime)
 		{
-			DataTable stocksTable = Data.Database.QueryDataTable("SELECT id, symbol FROM stocks");
+			DataTable stocksTable = Data.QueryDataTable("SELECT id, symbol FROM stocks");
 
 			string dateTime = CurrentDateTime.ToDatabaseDateTime();
 
@@ -30,7 +30,7 @@ namespace Core
 
 				int id = Convert.ToInt32(row["id"]);
 
-				DataTable historyTable = Data.Database.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
+				DataTable historyTable = Data.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
 					"stock_id", id,
 					"current_date", CurrentDateTime);
 
@@ -72,7 +72,7 @@ namespace Core
 			}
 
 			if (query.Length != 0)
-				Data.Database.Execute(query.ToString());
+				Data.Execute(query.ToString());
 
 			return true;
 		}

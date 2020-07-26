@@ -1,4 +1,5 @@
-﻿using GameFramework.Common.Utilities;
+﻿using GameFramework.ASCIISerializer;
+using GameFramework.Common.Utilities;
 using System;
 using System.Data;
 using System.Drawing;
@@ -24,9 +25,9 @@ namespace Core
 			if (actionTime.DayOfWeek == DayOfWeek.Thursday)
 				actionTime = actionTime.AddDays(2);
 
-			DataTable tradersData = Data.Database.QueryDataTable("SELECT id, name, email, send_full_sell_report FROM traders");
-			DataTable tradesData = Data.Database.QueryDataTable("SELECT trader_id, stock_id, SUM(count * action) count FROM trades WHERE DATE(action_time)<=DATE(@time) GROUP BY trader_id, stock_id", "time", CurrentDateTime);
-			DataTable analyzeData = Data.Database.QueryDataTable("SELECT s.id stock_id, s.name, s.symbol, a.action, a.worthiness FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id WHERE DATE(analyze_time)=DATE(@time)", "time", CurrentDateTime);
+			DataTable tradersData = Data.QueryDataTable("SELECT id, name, email, send_full_sell_report FROM traders");
+			DataTable tradesData = Data.QueryDataTable("SELECT trader_id, stock_id, SUM(count * action) count FROM trades WHERE DATE(action_time)<=DATE(@time) GROUP BY trader_id, stock_id", "time", CurrentDateTime);
+			DataTable analyzeData = Data.QueryDataTable("SELECT s.id stock_id, s.name, s.symbol, a.action, a.worthiness FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id WHERE DATE(analyze_time)=DATE(@time)", "time", CurrentDateTime);
 			analyzeData.DefaultView.Sort = "worthiness DESC";
 
 			analyzeData.DefaultView.RowFilter = "action=1";
@@ -114,19 +115,23 @@ namespace Core
 			{
 				StringBuilder emailBody = new StringBuilder();
 
+				DataRow traderRow = tradersData.Rows[i];
+
+				string name = traderRow["name"].ToString();
+
+				ISerializeArray emailsArr = Creator.Create<ISerializeArray>(traderRow["emails"].ToString());
+				if (emailsArr == null || emailsArr.Count == 0)
+					continue;
+
+				HTMLGenerator.BeginHeader2(emailBody);
+				HTMLGenerator.WriteContent(emailBody, "Hi {0}!", name);
+				HTMLGenerator.EndHeader2(emailBody);
+
 				HTMLGenerator.Style.Color = Color.Blue;
 				HTMLGenerator.BeginHeader2(emailBody);
 				HTMLGenerator.Style.Color = Color.Black;
 				HTMLGenerator.WriteContent(emailBody, "Suggested trades on {0}", actionTime.ToPersianDateTime());
 				HTMLGenerator.EndHeader2(emailBody);
-
-				DataRow traderRow = tradersData.Rows[i];
-
-				string emailAddress = traderRow["email"].ToString();
-				if (string.IsNullOrEmpty(emailAddress))
-					continue;
-
-				int sellCount = 0;
 
 				tradesData.DefaultView.RowFilter = "trader_id=" + Convert.ToInt32(traderRow["id"]);
 				if (tradesData.DefaultView.Count != 0)
@@ -141,6 +146,7 @@ namespace Core
 						HTMLGenerator.Style.Font = font;
 						BeginTable(emailBody);
 
+						int sellCount = 0;
 						for (int j = 0; j < tradesData.DefaultView.Count; ++j)
 						{
 							DataRowView tradeRow = tradesData.DefaultView[j];
@@ -180,7 +186,7 @@ namespace Core
 				if (Convert.ToBoolean(traderRow["send_full_sell_report"]))
 					body += fullSellText.ToString();
 
-				SendEmail(traderRow["name"].ToString(), emailAddress, body, actionTime);
+				SendEmail(name, emailsArr, body, actionTime);
 			}
 
 			return true;
@@ -207,11 +213,14 @@ namespace Core
 			HTMLGenerator.EndTableHeader(Builder);
 		}
 
-		private static bool SendEmail(string Name, string Email, string HTMLBody, DateTime Date)
+		private static bool SendEmail(string Name, ISerializeArray EmailsArray, string HTMLBody, DateTime Date)
 		{
 			MailMessage message = new MailMessage();
 			message.From = new MailAddress(ConfigManager.Config.AnalyzeReporter.Username, "Bourse Analyzer");
-			message.To.Add(new MailAddress(Email, Name));
+
+			message.To.Add(new MailAddress(EmailsArray.Get<string>(0), Name));
+			for (uint i = 1; i < EmailsArray.Count; ++i)
+				message.CC.Add(new MailAddress(EmailsArray.Get<string>(i), Name));
 
 			message.Subject = string.Format(SUBJECT_TEMPLATE, Date.ToPersianDateTime());
 			message.Body = string.Format(BODY_TEMPLATE, HTMLBody);

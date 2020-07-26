@@ -24,7 +24,7 @@ namespace Core
 
 					string workerName = worker.GetType().Name;
 
-					DataTable workerSchedulesData = Data.Database.QueryDataTable("SELECT id, schedule_time, UTC_TIMESTAMP() now FROM worker_schedules WHERE name=@name AND done=0", "name", workerName);
+					DataTable workerSchedulesData = Data.QueryDataTable("SELECT id, schedule_time, UTC_TIMESTAMP() now FROM worker_schedules WHERE name=@name AND done=0", "name", workerName);
 					for (int j = 0; j < workerSchedulesData.Rows.Count; ++j)
 					{
 						DataRow row = workerSchedulesData.Rows[j];
@@ -66,7 +66,7 @@ namespace Core
 				}
 
 				if (query.Length != 0)
-					Data.Database.Execute(query.ToString());
+					Data.Execute(query.ToString());
 
 				Thread.Sleep(ConfigManager.Config.CheckSchedulesPeriod * 1000);
 			}
