@@ -25,7 +25,7 @@ namespace Core
 			if (actionTime.DayOfWeek == DayOfWeek.Thursday)
 				actionTime = actionTime.AddDays(2);
 
-			DataTable tradersData = Data.QueryDataTable("SELECT id, name, email, send_full_sell_report FROM traders");
+			DataTable tradersData = Data.QueryDataTable("SELECT id, name, emails, send_full_sell_report FROM traders");
 			DataTable tradesData = Data.QueryDataTable("SELECT trader_id, stock_id, SUM(count * action) count FROM trades WHERE DATE(action_time)<=DATE(@time) GROUP BY trader_id, stock_id", "time", CurrentDateTime);
 			DataTable analyzeData = Data.QueryDataTable("SELECT s.id stock_id, s.name, s.symbol, a.action, a.worthiness FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id WHERE DATE(analyze_time)=DATE(@time)", "time", CurrentDateTime);
 			analyzeData.DefaultView.Sort = "worthiness DESC";
