@@ -35,7 +35,7 @@ namespace Core
 
 			try
 			{
-				data = Requests.DownloadFile(END_POINT + Date.ToPersianDateTime(), 1000000);
+				data = Requests.DownloadFile(END_POINT + Date.ToPersianDate(), 1000000);
 			}
 			catch (Exception e)
 			{

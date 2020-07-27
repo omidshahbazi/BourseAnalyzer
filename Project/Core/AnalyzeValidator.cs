@@ -19,7 +19,7 @@ namespace Core
 		public override bool Do(DateTime CurrentDateTime)
 		{
 			DateTime startTime = CurrentDateTime.Date.AddDays(-1);
-			if (CurrentDateTime.DayOfWeek == DayOfWeek.Saturday)
+			if (startTime.DayOfWeek == DayOfWeek.Friday)
 				startTime = startTime.AddDays(-2);
 
 			DataTable analyzesData = Data.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=DATE(@date)", "date", startTime);

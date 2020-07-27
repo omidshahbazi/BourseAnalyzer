@@ -31,7 +31,7 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CalculationCount; }
 			}
 
-			public static Result Analyze(Info Info)
+			public static Result[] Analyze(Info Info)
 			{
 				if (!ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.Enabled)
 					return null;
@@ -42,40 +42,47 @@ namespace Core
 				if (chartData == null)
 					return null;
 
-				int lastIndex = chartData.Rows.Count - 1;
+				Result[] results = new Result[ConfigManager.Config.DataAnalyzer.BacklogCount];
 
-				double lastMACD = Convert.ToDouble(chartData.Rows[lastIndex]["macd"]);
-				double prevMACD = Convert.ToDouble(chartData.Rows[lastIndex - 1]["macd"]);
+				for (int i = 0; i < results.Length; ++i)
+				{
+					int index = chartData.Rows.Count - 1 - i;
 
-				double lastSignal = Convert.ToDouble(chartData.Rows[lastIndex]["signal"]);
-				double prevSignal = Convert.ToDouble(chartData.Rows[lastIndex - 1]["signal"]);
+					double prevMACD = Convert.ToDouble(chartData.Rows[index - 1]["macd"]);
+					double currMACD = Convert.ToDouble(chartData.Rows[index]["macd"]);
 
-				int action = 0;
-				double worthiness = 0;
+					double prevSignal = Convert.ToDouble(chartData.Rows[index - 1]["signal"]);
+					double currSignal = Convert.ToDouble(chartData.Rows[index]["signal"]);
 
-				if ((prevMACD <= prevSignal && lastMACD > lastSignal) ||
-					(prevMACD < prevSignal && lastMACD >= lastSignal))
-				{
-					action = 1;
-					worthiness = 0.5F;
-				}
-				else if ((prevMACD >= prevSignal && lastMACD < lastSignal) ||
-						 (prevMACD > prevSignal && lastMACD <= lastSignal))
-				{
-					action = -1;
-					worthiness = 0.5F;
-				}
-				else if ((prevMACD <= 0 && 0 < lastMACD) ||
-						 (prevMACD < 0 && 0 <= lastMACD))
-				{
-					action = 1;
-					worthiness = 1;
-				}
-				else if ((prevMACD >= 0 && 0 > lastMACD) ||
-					 	 (prevMACD > 0 && 0 >= lastMACD))
-				{
-					action = -1;
-					worthiness = 1;
+					int action = 0;
+					double worthiness = 0;
+
+					if ((prevMACD <= prevSignal && currMACD > currSignal) ||
+						(prevMACD < prevSignal && currMACD >= currSignal))
+					{
+						action = 1;
+						worthiness = 1;
+					}
+					else if ((prevMACD >= prevSignal && currMACD < currSignal) ||
+							 (prevMACD > prevSignal && currMACD <= currSignal))
+					{
+						action = -1;
+						worthiness = 1;
+					}
+					else if ((prevMACD <= 0 && 0 < currMACD) ||
+							 (prevMACD < 0 && 0 <= currMACD))
+					{
+						action = 1;
+						worthiness = 0.5F;
+					}
+					else if ((prevMACD >= 0 && 0 > currMACD) ||
+							  (prevMACD > 0 && 0 >= currMACD))
+					{
+						action = -1;
+						worthiness = 0.5F;
+					}
+
+					results[results.Length - 1 - i] = new Result() { Action = action, Worthiness = worthiness };
 				}
 
 				if (ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.WriteToCSV)
@@ -95,10 +102,10 @@ namespace Core
 						tempDataRow["signal"] = chartRow["signal"];
 					}
 
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CSVPath, Info, action, tempData);
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CSVPath, Info, tempData);
 				}
 
-				return new Result() { Action = action, Worthiness = worthiness };
+				return results;
 			}
 
 			private static DataTable GenerateData(DataTable Data)
@@ -121,13 +128,13 @@ namespace Core
 					return null;
 				}
 
-				if (CalculationCount < 2)
+				if (CalculationCount < ConfigManager.Config.DataAnalyzer.BacklogCount + 1)
 				{
-					ConsoleHelper.WriteError("CalculationCount must be grater than 1, current value is {0}", CalculationCount);
+					ConsoleHelper.WriteError("CalculationCount must be grater than {0}, current value is {1}", ConfigManager.Config.DataAnalyzer.BacklogCount, CalculationCount);
 					return null;
 				}
 
-				int calculationCount = Math.Min(Math.Max(2, Data.Rows.Count - SlowHistoryCount - SignalHistoryCount), CalculationCount);
+				int calculationCount = Math.Min(Math.Max(ConfigManager.Config.DataAnalyzer.BacklogCount + 1, Data.Rows.Count - SlowHistoryCount - SignalHistoryCount), CalculationCount);
 
 				int requiredCount = calculationCount + SlowHistoryCount + SignalHistoryCount;
 
@@ -188,13 +195,6 @@ namespace Core
 
 					lastEMA = ema;
 				}
-			}
-
-			private static DataTable GenerateSignalData(DataTable Data)
-			{
-				if (SignalHistoryCount <= 0)
-					return null;
-				return null;
 			}
 		}
 	}

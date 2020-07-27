@@ -107,7 +107,7 @@ namespace Core
 				WriteHeader2(emailBody, string.Format("Hi {0}!", name), Color.Black);
 
 				HTMLGenerator.Style.Font = null;
-				WriteHeader2(emailBody, string.Format("Suggested trades on {0}", actionTime.ToPersianDateTime()), Color.Blue);
+				WriteHeader2(emailBody, string.Format("Suggested trades on {0}", actionTime.ToPersianDate()), Color.Blue);
 
 				tradesData.DefaultView.RowFilter = string.Format("trader_id={0}", Convert.ToInt32(traderRow["id"]));
 				if (tradesData.DefaultView.Count != 0)
@@ -240,7 +240,7 @@ namespace Core
 			for (uint i = 1; i < EmailsArray.Count; ++i)
 				message.CC.Add(new MailAddress(EmailsArray.Get<string>(i), Name));
 
-			message.Subject = string.Format(SUBJECT_TEMPLATE, Date.ToPersianDateTime());
+			message.Subject = string.Format(SUBJECT_TEMPLATE, Date.ToPersianDate());
 			message.Body = string.Format(BODY_TEMPLATE, HTMLBody);
 
 			message.IsBodyHtml = true;

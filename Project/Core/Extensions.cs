@@ -23,7 +23,7 @@ namespace Core
 			return Self.ToString("yyyy/MM/dd HH:mm:ss");
 		}
 
-		public static string ToPersianDateTime(this DateTime Self)
+		public static string ToPersianDate(this DateTime Self)
 		{
 			PersianCalendar persianCalendar = new PersianCalendar();
 

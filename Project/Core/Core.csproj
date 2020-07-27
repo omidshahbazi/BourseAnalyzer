@@ -48,6 +48,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analyzer_AwesomeOscillator.cs" />
     <Compile Include="Analyzer_MovingAverageConvergenceDivergence.cs" />
     <Compile Include="Analyzer_SimpleMovingAverage.cs" />
     <Compile Include="Analyzer_RelativeStrengthIndex.cs" />

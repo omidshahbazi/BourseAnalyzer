@@ -1,0 +1,125 @@
+﻿using GameFramework.Common.Utilities;
+using System;
+using System.Data;
+
+namespace Core
+{
+	public static partial class Analyzer
+	{
+		public static class AwesomeOscillator
+		{
+			//https://currency.com/awesome-oscillator-vs-macd
+
+			private static int SlowHistoryCount
+			{
+				get { return ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.SlowHistoryCount; }
+			}
+
+			private static int FastHistoryCount
+			{
+				get { return ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.FastHistoryCount; }
+			}
+
+			private static int CalculationCount
+			{
+				get { return ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.CalculationCount; }
+			}
+
+			public static Result[] Analyze(Info Info)
+			{
+				if (!ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.Enabled)
+					return null;
+
+				DataTable data = Info.HistoryData;
+
+				DataTable chartData = GenerateData(data);
+				if (chartData == null)
+					return null;
+
+				Result[] results = new Result[ConfigManager.Config.DataAnalyzer.BacklogCount];
+
+				for (int i = 0; i < results.Length; ++i)
+				{
+					int index = chartData.Rows.Count - 1 - i;
+
+					double prevAO = Convert.ToDouble(chartData.Rows[index - 1]["ao"]);
+					double currAO = Convert.ToDouble(chartData.Rows[index]["ao"]);
+
+					int action = 0;
+					double worthiness = 0;
+
+					if (prevAO <= 0 && 0 < currAO)
+					{
+						action = 1;
+						worthiness = 1;
+					}
+					else if (prevAO >= 0 && 0 > currAO)
+					{
+						action = -1;
+						worthiness = 1;
+					}
+
+					results[results.Length - 1 - i] = new Result() { Action = action, Worthiness = worthiness };
+				}
+
+				if (ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.WriteToCSV)
+				{
+					DataTable tempData = data.DefaultView.ToTable();
+					tempData.Columns.Add("ao");
+
+					int startIndex = tempData.Rows.Count - chartData.Rows.Count;
+
+					for (int i = 0; i < chartData.Rows.Count; ++i)
+						tempData.Rows[startIndex + i]["ao"] = chartData.Rows[i]["ao"];
+
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.CSVPath, Info, tempData);
+				}
+
+				return results;
+			}
+
+			private static DataTable GenerateData(DataTable Data)
+			{
+				if (FastHistoryCount <= 0)
+				{
+					ConsoleHelper.WriteError("FastHistoryCount must be grater than 0, current value is {0}", FastHistoryCount);
+					return null;
+				}
+
+				if (SlowHistoryCount <= 0)
+				{
+					ConsoleHelper.WriteError("SlowHistoryCount must be grater than 0, current value is {0}", SlowHistoryCount);
+					return null;
+				}
+
+				if (SlowHistoryCount < FastHistoryCount)
+				{
+					ConsoleHelper.WriteError("SlowHistoryCount must be grater than FastHistoryCount, current values area {0}, {1}", SlowHistoryCount, FastHistoryCount);
+					return null;
+				}
+
+				if (CalculationCount < ConfigManager.Config.DataAnalyzer.BacklogCount + 1)
+				{
+					ConsoleHelper.WriteError("CalculationCount must be grater than {0}, current value is {1}", ConfigManager.Config.DataAnalyzer.BacklogCount, CalculationCount);
+					return null;
+				}
+
+				int calculationCount = Math.Min(Math.Max(ConfigManager.Config.DataAnalyzer.BacklogCount + 1, Data.Rows.Count - SlowHistoryCount), CalculationCount);
+
+				DataTable chartData = new DataTable();
+				chartData.Columns.Add("ao", typeof(double));
+
+				DataTable slowSMAData = Analyzer.GenerateSMAData(Data, "median", SlowHistoryCount, calculationCount);
+				DataTable fastSMAData = Analyzer.GenerateSMAData(Data, "median", FastHistoryCount, calculationCount);
+
+				if (slowSMAData == null || fastSMAData == null)
+					return null;
+
+				for (int i = 0; i < calculationCount; ++i)
+					chartData.Rows.Add(Convert.ToDouble(fastSMAData.Rows[i]["sma"]) - Convert.ToDouble(slowSMAData.Rows[i]["sma"]));
+
+				return chartData;
+			}
+		}
+	}
+}

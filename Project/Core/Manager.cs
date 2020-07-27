@@ -35,12 +35,15 @@ namespace Core
 						if (scheduleTime > nowTime)
 							continue;
 
-						ConsoleHelper.WriteInfo("{0} is working on {1}", workerName, scheduleTime);
+						if (worker.Enabled)
+						{
+							ConsoleHelper.WriteInfo("{0} is working on {1}", workerName, scheduleTime);
 
-						if (!workers[i].Do(scheduleTime))
-							break;
+							if (!workers[i].Do(scheduleTime))
+								break;
 
-						ConsoleHelper.WriteInfo("{0} done", workerName);
+							ConsoleHelper.WriteInfo("{0} done", workerName);
+						}
 
 						query.Append("UPDATE worker_schedules SET done=1 WHERE id=");
 						query.Append(row["id"]);
@@ -63,10 +66,14 @@ namespace Core
 						query.Append(nextScheduleTime.AddHours(worker.WorkHour).ToDatabaseDateTime());
 						query.Append("\',0);");
 					}
-				}
 
-				if (query.Length != 0)
-					Data.Execute(query.ToString());
+					if (query.Length != 0)
+					{
+						Data.Execute(query.ToString());
+
+						query = new StringBuilder();
+					}
+				}
 
 				Thread.Sleep(ConfigManager.Config.CheckSchedulesPeriod * 1000);
 			}

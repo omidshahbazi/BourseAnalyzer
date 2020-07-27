@@ -2,7 +2,6 @@
 
 namespace Worker
 {
-	//TODO: check out what happend for invalid analyzes
 	//TODO: create client
 	class Program
 	{

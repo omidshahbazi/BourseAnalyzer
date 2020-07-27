@@ -40,7 +40,7 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.MaxRSI; }
 			}
 
-			public static Result Analyze(Info Info)
+			public static Result[] Analyze(Info Info)
 			{
 				if (!ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Enabled)
 					return null;
@@ -69,39 +69,46 @@ namespace Core
 				if (rsiData == null)
 					return null;
 
-				int lastIndex = rsiData.Rows.Count - 1;
-				double prevRSI = Convert.ToDouble(rsiData.Rows[lastIndex - 1]["rsi"]);
-				double currRSI = Convert.ToDouble(rsiData.Rows[lastIndex]["rsi"]);
+				Result[] results = new Result[ConfigManager.Config.DataAnalyzer.BacklogCount];
 
-				int action = 0;
-				double worthiness = 0;
+				for (int i = 0; i < results.Length; ++i)
+				{
+					int index = rsiData.Rows.Count - 1 - i;
+					double prevRSI = Convert.ToDouble(rsiData.Rows[index - 1]["rsi"]);
+					double currRSI = Convert.ToDouble(rsiData.Rows[index]["rsi"]);
 
-				if (prevRSI <= LowRSI && LowRSI < currRSI)
-				{
-					action = 1;
-					worthiness = (LowRSI - prevRSI) / LowRSI;
-				}
-				if (HighRSI <= prevRSI && currRSI < HighRSI)
-				{
-					action = -1;
-					worthiness = (prevRSI - HighRSI) / (MaxRSI - HighRSI);
-				}
-				else
-				{
-					lastIndex = data.Rows.Count - 1;
-					double prevClose = Convert.ToDouble(data.Rows[lastIndex - 1]["close"]);
-					double currClose = Convert.ToDouble(data.Rows[lastIndex]["close"]);
+					int action = 0;
+					double worthiness = 0;
 
-					if (prevRSI <= MidRSI && MidRSI < currRSI && prevClose < currClose)
+					if (prevRSI <= LowRSI && LowRSI < currRSI)
 					{
 						action = 1;
-						worthiness = (currRSI - prevRSI) / MaxRSI;
+						worthiness = (LowRSI - prevRSI) / LowRSI;
 					}
-					else if (MidRSI <= prevRSI && currRSI < MidRSI && prevClose > currClose)
+					if (HighRSI <= prevRSI && currRSI < HighRSI)
 					{
 						action = -1;
-						worthiness = (prevRSI - currRSI) / MaxRSI;
+						worthiness = (prevRSI - HighRSI) / (MaxRSI - HighRSI);
 					}
+					else
+					{
+						index = data.Rows.Count - 1;
+						double prevClose = Convert.ToDouble(data.Rows[index - 1]["close"]);
+						double currClose = Convert.ToDouble(data.Rows[index]["close"]);
+
+						if (prevRSI <= MidRSI && MidRSI < currRSI && prevClose < currClose)
+						{
+							action = 1;
+							worthiness = (currRSI - prevRSI) / MaxRSI;
+						}
+						else if (MidRSI <= prevRSI && currRSI < MidRSI && prevClose > currClose)
+						{
+							action = -1;
+							worthiness = (prevRSI - currRSI) / MaxRSI;
+						}
+					}
+
+					results[results.Length - 1 - i] = new Result() { Action = action, Worthiness = worthiness };
 				}
 
 				if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.WriteToCSV)
@@ -118,10 +125,10 @@ namespace Core
 						row["rsi"] = rsiData.Rows[i]["rsi"];
 					}
 
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CSVPath, Info, action, tempData);
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CSVPath, Info, tempData);
 				}
 
-				return new Result() { Action = action, Worthiness = worthiness };
+				return results;
 			}
 
 			private static DataTable GenerateRSIData(DataTable Data)
@@ -132,18 +139,18 @@ namespace Core
 					return null;
 				}
 
-				if (CalculationCount < 2)
+				if (CalculationCount < ConfigManager.Config.DataAnalyzer.BacklogCount + 1)
 				{
-					ConsoleHelper.WriteError("CalculationCount must be grater than 1, current value is {0}", CalculationCount);
+					ConsoleHelper.WriteError("CalculationCount must be grater than {0}, current value is {1}", ConfigManager.Config.DataAnalyzer.BacklogCount, CalculationCount);
 					return null;
 				}
 
-				if (Data.Rows.Count < HistoryCount + 1)
-					return null;
-
-				int calculationCount = Math.Min(Data.Rows.Count - HistoryCount + 1, CalculationCount);
+				int calculationCount = Math.Min(Math.Max(ConfigManager.Config.DataAnalyzer.BacklogCount + 1, Data.Rows.Count - HistoryCount + 1), CalculationCount);
 
 				int requiredCount = HistoryCount - 1 + calculationCount;
+
+				if (Data.Rows.Count < requiredCount)
+					return null;
 
 				int startIndex = Data.Rows.Count - requiredCount;
 

@@ -47,14 +47,27 @@ namespace Core
 		public string CSVPath = "Output/MACD/";
 	}
 
+	public class AwesomeOscillatoreConfig
+	{
+		public bool Enabled = true;
+		public int SlowHistoryCount = 5;
+		public int FastHistoryCount = 34;
+		public int CalculationCount = 90;
+
+		public bool WriteToCSV = false;
+		public string CSVPath = "Output/AO/";
+	}
+
 	public class DataAnalyzerConfig
 	{
 		public bool Enabled = true;
 		public float WorkHour = 13;
+		public int BacklogCount = 4;
 
 		public RelativeStrengthIndexConfig RelativeStrengthIndex = new RelativeStrengthIndexConfig();
 		public MovingAverageConvergenceDivergenceConfig MovingAverageConvergenceDivergence = new MovingAverageConvergenceDivergenceConfig();
 		public SimpleMovingAverageConfig SimpleMovingAverage = new SimpleMovingAverageConfig();
+		public AwesomeOscillatoreConfig AwesomeOscillatore = new AwesomeOscillatoreConfig();
 	}
 
 	public class AnalyzeValidatorConfig
