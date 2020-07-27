@@ -9,6 +9,11 @@ namespace Core
 	{
 		private static readonly Func<Analyzer.Info, Analyzer.Result>[] Analyzers = new Func<Analyzer.Info, Analyzer.Result>[] { Analyzer.RelativeStrengthIndex.Analyze, Analyzer.MovingAverageConvergenceDivergence.Analyze, Analyzer.SimpleMovingAverage.Analyze };
 
+		public override bool Enabled
+		{
+			get { return ConfigManager.Config.DataAnalyzer.Enabled; }
+		}
+
 		public override float WorkHour
 		{
 			get { return ConfigManager.Config.DataAnalyzer.WorkHour; }

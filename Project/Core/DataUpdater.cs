@@ -6,6 +6,11 @@ namespace Core
 {
 	public class DataUpdater : Worker
 	{
+		public override bool Enabled
+		{
+			get { return ConfigManager.Config.DataUpdater.Enabled; }
+		}
+
 		public override float WorkHour
 		{
 			get { return ConfigManager.Config.DataUpdater.WorkHour; }

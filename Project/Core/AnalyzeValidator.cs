@@ -6,6 +6,11 @@ namespace Core
 {
 	public class AnalyzeValidator : Worker
 	{
+		public override bool Enabled
+		{
+			get { return ConfigManager.Config.AnalyzeValidator.Enabled; }
+		}
+
 		public override float WorkHour
 		{
 			get { return ConfigManager.Config.AnalyzeValidator.WorkHour; }
@@ -26,7 +31,7 @@ namespace Core
 			{
 				DataRow analyzeRow = analyzesData.Rows[i];
 
-				snapshotsData.DefaultView.RowFilter = "stock_id=" + analyzeRow["stock_id"];
+				snapshotsData.DefaultView.RowFilter = string.Format("stock_id={0}", analyzeRow["stock_id"]);
 				if (snapshotsData.DefaultView.Count == 0)
 					continue;
 

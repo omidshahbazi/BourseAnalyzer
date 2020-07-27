@@ -14,6 +14,11 @@ namespace Core
 		private const string SUBJECT_TEMPLATE = "Suggested trades on {0}";
 		private const string BODY_TEMPLATE = "<html><body>{0}</body></html>";
 
+		public override bool Enabled
+		{
+			get { return ConfigManager.Config.AnalyzeReporter.Enabled; }
+		}
+
 		public override float WorkHour
 		{
 			get { return ConfigManager.Config.AnalyzeReporter.WorkHour; }
@@ -21,20 +26,20 @@ namespace Core
 
 		public override bool Do(DateTime CurrentDateTime)
 		{
-			DateTime actionTime = CurrentDateTime.AddDays(1);
-			if (actionTime.DayOfWeek == DayOfWeek.Thursday)
-				actionTime = actionTime.AddDays(2);
+			string todaysDate = CurrentDateTime.Date.ToDatabaseDateTime();
 
 			DataTable tradersData = Data.QueryDataTable("SELECT id, name, emails, send_full_sell_report FROM traders");
 			DataTable tradesData = Data.QueryDataTable("SELECT trader_id, stock_id, SUM(count * action) count FROM trades WHERE DATE(action_time)<=DATE(@time) GROUP BY trader_id, stock_id", "time", CurrentDateTime);
-			DataTable analyzeData = Data.QueryDataTable("SELECT s.id stock_id, s.name, s.symbol, a.action, a.worthiness FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id WHERE DATE(analyze_time)=DATE(@time)", "time", CurrentDateTime);
-			analyzeData.DefaultView.Sort = "worthiness DESC";
+			DataTable analyzesData = Data.QueryDataTable("SELECT s.id stock_id, s.name, s.symbol, DATE(analyze_time) analyze_time, a.action, a.worthiness FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id WHERE DATE(analyze_time)<=DATE(@time)", "time", CurrentDateTime);
+			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, DATE(take_time) take_time, close FROM snapshots WHERE DATE(take_time)<=DATE(@time)", "time", CurrentDateTime);
 
-			analyzeData.DefaultView.RowFilter = "action=1";
-			DataTable buyAnalyzeData = analyzeData.DefaultView.ToTable();
+			analyzesData.DefaultView.Sort = "worthiness DESC";
 
-			analyzeData.DefaultView.RowFilter = "action=-1";
-			DataTable sellAnalyzeData = analyzeData.DefaultView.ToTable();
+			analyzesData.DefaultView.RowFilter = string.Format("action=1 AND analyze_time='{0}'", todaysDate);
+			DataTable buyAnalyzeData = analyzesData.DefaultView.ToTable();
+
+			analyzesData.DefaultView.RowFilter = string.Format("action=-1 AND analyze_time='{0}'", todaysDate);
+			DataTable sellAnalyzeData = analyzesData.DefaultView.ToTable();
 
 			HTMLGenerator.Style = new HTMLGenerator.HTMLStyle();
 
@@ -42,12 +47,8 @@ namespace Core
 
 			StringBuilder fullBuyText = new StringBuilder();
 			{
-				HTMLGenerator.Style.Color = Color.Green;
 				HTMLGenerator.Style.Font = null;
-				HTMLGenerator.BeginHeader2(fullBuyText);
-				HTMLGenerator.Style.Color = Color.Black;
-				HTMLGenerator.WriteContent(fullBuyText, "Full Buy Report:");
-				HTMLGenerator.EndHeader2(fullBuyText);
+				WriteHeader2(fullBuyText, "Full Buy Report:", Color.Green);
 
 				HTMLGenerator.Style.Font = font;
 				BeginTable(fullBuyText);
@@ -56,20 +57,9 @@ namespace Core
 				{
 					DataRow row = buyAnalyzeData.Rows[i];
 
-					HTMLGenerator.BeginTableRow(fullBuyText);
-					HTMLGenerator.BeginTableData(fullBuyText);
-					HTMLGenerator.WriteContent(fullBuyText, i + 1);
-					HTMLGenerator.EndTableData(fullBuyText);
-					HTMLGenerator.BeginTableData(fullBuyText);
-					HTMLGenerator.WriteContent(fullBuyText, row["name"]);
-					HTMLGenerator.EndTableData(fullBuyText);
-					HTMLGenerator.BeginTableData(fullBuyText);
-					HTMLGenerator.WriteContent(fullBuyText, row["symbol"]);
-					HTMLGenerator.EndTableData(fullBuyText);
-					HTMLGenerator.BeginTableData(fullBuyText);
-					HTMLGenerator.WriteContent(fullBuyText, (int)(Convert.ToDouble(row["worthiness"]) * 100) + "%");
-					HTMLGenerator.EndTableData(fullBuyText);
-					HTMLGenerator.EndTableRow(fullBuyText);
+					double changes = CalculateChanges(analyzesData, snapshotsData, -1, Convert.ToInt32(row["stock_id"]), todaysDate);
+
+					WriteTableRow(fullBuyText, i + 1, row["name"].ToString(), row["symbol"].ToString(), changes, Convert.ToDouble(row["worthiness"]));
 				}
 
 				HTMLGenerator.EndTable(fullBuyText);
@@ -78,11 +68,8 @@ namespace Core
 
 			StringBuilder fullSellText = new StringBuilder();
 			{
-				HTMLGenerator.Style.Color = Color.Red;
-				HTMLGenerator.BeginHeader2(fullSellText);
-				HTMLGenerator.Style.Color = Color.Black;
-				HTMLGenerator.WriteContent(fullSellText, "Full Sell Report:");
-				HTMLGenerator.EndHeader2(fullSellText);
+				HTMLGenerator.Style.Font = null;
+				WriteHeader2(fullSellText, "Full Sell Report:", Color.Red);
 
 				HTMLGenerator.Style.Font = font;
 				BeginTable(fullSellText);
@@ -91,25 +78,18 @@ namespace Core
 				{
 					DataRow row = sellAnalyzeData.Rows[i];
 
-					HTMLGenerator.BeginTableRow(fullSellText);
-					HTMLGenerator.BeginTableData(fullSellText);
-					HTMLGenerator.WriteContent(fullSellText, i + 1);
-					HTMLGenerator.EndTableData(fullSellText);
-					HTMLGenerator.BeginTableData(fullSellText);
-					HTMLGenerator.WriteContent(fullSellText, row["name"]);
-					HTMLGenerator.EndTableData(fullSellText);
-					HTMLGenerator.BeginTableData(fullSellText);
-					HTMLGenerator.WriteContent(fullSellText, row["symbol"]);
-					HTMLGenerator.EndTableData(fullSellText);
-					HTMLGenerator.BeginTableData(fullSellText);
-					HTMLGenerator.WriteContent(fullSellText, (int)(Convert.ToDouble(row["worthiness"]) * 100) + "%");
-					HTMLGenerator.EndTableData(fullSellText);
-					HTMLGenerator.EndTableRow(fullSellText);
+					double changes = CalculateChanges(analyzesData, snapshotsData, 1, Convert.ToInt32(row["stock_id"]), todaysDate);
+
+					WriteTableRow(fullSellText, i + 1, row["name"].ToString(), row["symbol"].ToString(), changes, Convert.ToDouble(row["worthiness"]));
 				}
 
 				HTMLGenerator.EndTable(fullBuyText);
 				HTMLGenerator.Style.Font = null;
 			}
+
+			DateTime actionTime = CurrentDateTime.AddDays(1);
+			if (actionTime.DayOfWeek == DayOfWeek.Thursday)
+				actionTime = actionTime.AddDays(2);
 
 			for (int i = 0; i < tradersData.Rows.Count; ++i)
 			{
@@ -123,24 +103,17 @@ namespace Core
 				if (emailsArr == null || emailsArr.Count == 0)
 					continue;
 
-				HTMLGenerator.BeginHeader2(emailBody);
-				HTMLGenerator.WriteContent(emailBody, "Hi {0}!", name);
-				HTMLGenerator.EndHeader2(emailBody);
+				HTMLGenerator.Style.Font = null;
+				WriteHeader2(emailBody, string.Format("Hi {0}!", name), Color.Black);
 
-				HTMLGenerator.Style.Color = Color.Blue;
-				HTMLGenerator.BeginHeader2(emailBody);
-				HTMLGenerator.Style.Color = Color.Black;
-				HTMLGenerator.WriteContent(emailBody, "Suggested trades on {0}", actionTime.ToPersianDateTime());
-				HTMLGenerator.EndHeader2(emailBody);
+				HTMLGenerator.Style.Font = null;
+				WriteHeader2(emailBody, string.Format("Suggested trades on {0}", actionTime.ToPersianDateTime()), Color.Blue);
 
-				tradesData.DefaultView.RowFilter = "trader_id=" + Convert.ToInt32(traderRow["id"]);
+				tradesData.DefaultView.RowFilter = string.Format("trader_id={0}", Convert.ToInt32(traderRow["id"]));
 				if (tradesData.DefaultView.Count != 0)
 				{
-					HTMLGenerator.Style.Color = Color.Red;
-					HTMLGenerator.BeginHeader2(emailBody);
-					HTMLGenerator.Style.Color = Color.Black;
-					HTMLGenerator.WriteContent(emailBody, "Should Sell:");
-					HTMLGenerator.EndHeader2(emailBody);
+					HTMLGenerator.Style.Font = null;
+					WriteHeader2(emailBody, "Should Sell:", Color.Red);
 
 					{
 						HTMLGenerator.Style.Font = font;
@@ -154,25 +127,14 @@ namespace Core
 							if (Convert.ToInt32(tradeRow["count"]) <= 0)
 								continue;
 
-							sellAnalyzeData.DefaultView.RowFilter = "stock_id=" + tradeRow["stock_id"];
+							sellAnalyzeData.DefaultView.RowFilter = string.Format("stock_id={0}", tradeRow["stock_id"]);
 							if (sellAnalyzeData.DefaultView.Count != 0)
 							{
 								DataRowView sellRow = sellAnalyzeData.DefaultView[0];
 
-								HTMLGenerator.BeginTableRow(emailBody);
-								HTMLGenerator.BeginTableData(emailBody);
-								HTMLGenerator.WriteContent(emailBody, ++sellCount);
-								HTMLGenerator.EndTableData(emailBody);
-								HTMLGenerator.BeginTableData(emailBody);
-								HTMLGenerator.WriteContent(emailBody, sellRow["name"]);
-								HTMLGenerator.EndTableData(emailBody);
-								HTMLGenerator.BeginTableData(emailBody);
-								HTMLGenerator.WriteContent(emailBody, sellRow["symbol"]);
-								HTMLGenerator.EndTableData(emailBody);
-								HTMLGenerator.BeginTableData(emailBody);
-								HTMLGenerator.WriteContent(emailBody, (int)(Convert.ToDouble(sellRow["worthiness"]) * 100) + "%");
-								HTMLGenerator.EndTableData(emailBody);
-								HTMLGenerator.EndTableRow(emailBody);
+								double changes = CalculateChanges(analyzesData, snapshotsData, 1, Convert.ToInt32(sellRow["stock_id"]), todaysDate);
+
+								WriteTableRow(emailBody, ++sellCount, sellRow["name"].ToString(), sellRow["symbol"].ToString(), changes, Convert.ToDouble(sellRow["worthiness"]));
 							}
 						}
 
@@ -192,6 +154,29 @@ namespace Core
 			return true;
 		}
 
+		private static double CalculateChanges(DataTable AnalyzesData, DataTable SnapshotsData, int PreviousAction, int StockID, string TodayDate)
+		{
+			AnalyzesData.DefaultView.RowFilter = string.Format("stock_id={0} AND action={1} AND analyze_time<'{2}'", StockID, PreviousAction, TodayDate);
+			if (AnalyzesData.DefaultView.Count != 0)
+			{
+				SnapshotsData.DefaultView.RowFilter = string.Format("stock_id={0} AND take_time='{1}'", StockID, AnalyzesData.DefaultView[0]["analyze_time"]);
+				if (SnapshotsData.DefaultView.Count != 0)
+				{
+					int prevClose = Convert.ToInt32(SnapshotsData.DefaultView[0]["close"]);
+
+					SnapshotsData.DefaultView.RowFilter = string.Format("stock_id={0} AND take_time='{1}'", StockID, TodayDate);
+					if (SnapshotsData.DefaultView.Count != 0)
+					{
+						int currClose = Convert.ToInt32(SnapshotsData.DefaultView[0]["close"]);
+
+						return 1 - (currClose / (double)prevClose);
+					}
+				}
+			}
+
+			return double.NaN;
+		}
+
 		private static void BeginTable(StringBuilder Builder)
 		{
 			HTMLGenerator.BeginTable(Builder);
@@ -207,10 +192,43 @@ namespace Core
 			HTMLGenerator.WriteContent(Builder, "Symbol");
 			HTMLGenerator.EndTableData(Builder);
 			HTMLGenerator.BeginTableData(Builder);
+			HTMLGenerator.WriteContent(Builder, "Changes");
+			HTMLGenerator.EndTableData(Builder);
+			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, "Worthiness");
 			HTMLGenerator.EndTableData(Builder);
 			HTMLGenerator.EndTableRow(Builder);
 			HTMLGenerator.EndTableHeader(Builder);
+		}
+
+		private static void WriteTableRow(StringBuilder Builder, int Number, string Name, string Symbol, double Changes, double Worthiness)
+		{
+			HTMLGenerator.BeginTableRow(Builder);
+			HTMLGenerator.BeginTableData(Builder);
+			HTMLGenerator.WriteContent(Builder, Number);
+			HTMLGenerator.EndTableData(Builder);
+			HTMLGenerator.BeginTableData(Builder);
+			HTMLGenerator.WriteContent(Builder, Name);
+			HTMLGenerator.EndTableData(Builder);
+			HTMLGenerator.BeginTableData(Builder);
+			HTMLGenerator.WriteContent(Builder, Symbol);
+			HTMLGenerator.EndTableData(Builder);
+			HTMLGenerator.BeginTableData(Builder);
+			HTMLGenerator.WriteContent(Builder, (double.IsNaN(Changes) ? "N/A" : (int)(Changes * 100) + "%"));
+			HTMLGenerator.EndTableData(Builder);
+			HTMLGenerator.BeginTableData(Builder);
+			HTMLGenerator.WriteContent(Builder, (int)(Worthiness * 100) + "%");
+			HTMLGenerator.EndTableData(Builder);
+			HTMLGenerator.EndTableRow(Builder);
+		}
+
+		private static void WriteHeader2(StringBuilder Builder, string Content, Color Color)
+		{
+			HTMLGenerator.Style.Color = Color;
+			HTMLGenerator.BeginHeader2(Builder);
+			HTMLGenerator.Style.Color = Color.Black;
+			HTMLGenerator.WriteContent(Builder, Content);
+			HTMLGenerator.EndHeader2(Builder);
 		}
 
 		private static bool SendEmail(string Name, ISerializeArray EmailsArray, string HTMLBody, DateTime Date)

@@ -6,11 +6,13 @@ namespace Core
 {
 	public class DataUpdaterConfig
 	{
+		public bool Enabled = true;
 		public float WorkHour = 13;
 	}
 
 	public class RelativeStrengthIndexConfig
 	{
+		public bool Enabled = true;
 		public int HistoryCount = 14;
 		public int CalculationCount = 90;
 		public float LowRSI = 0.3F;
@@ -24,6 +26,7 @@ namespace Core
 
 	public class MovingAverageConvergenceDivergenceConfig
 	{
+		public bool Enabled = true;
 		public int SlowHistoryCount = 26;
 		public int FastHistoryCount = 12;
 		public int SignalHistoryCount = 9;
@@ -35,6 +38,7 @@ namespace Core
 
 	public class SimpleMovingAverageConfig
 	{
+		public bool Enabled = true;
 		public int[] HistoryCount = new int[] { 14, 31 };
 		public int FastHistoryCount = 40;
 		public int CalculationCount = 90;
@@ -45,6 +49,7 @@ namespace Core
 
 	public class DataAnalyzerConfig
 	{
+		public bool Enabled = true;
 		public float WorkHour = 13;
 
 		public RelativeStrengthIndexConfig RelativeStrengthIndex = new RelativeStrengthIndexConfig();
@@ -54,11 +59,24 @@ namespace Core
 
 	public class AnalyzeValidatorConfig
 	{
+		public bool Enabled = true;
 		public float WorkHour = 13;
 	}
 
 	public class AnalyzeReporterConfig
 	{
+		public bool Enabled = true;
+		public float WorkHour = 13;
+
+		public string Host;
+		public ushort Port;
+		public string Username;
+		public string Password;
+	}
+
+	public class ValidationReporterConfig
+	{
+		public bool Enabled = true;
 		public float WorkHour = 13;
 
 		public string Host;
@@ -74,8 +92,9 @@ namespace Core
 		public int CheckSchedulesPeriod = 60;
 
 		public DataUpdaterConfig DataUpdater = new DataUpdaterConfig();
-		public DataAnalyzerConfig DataAnalyzer = new DataAnalyzerConfig();
 		public AnalyzeValidatorConfig AnalyzeValidator = new AnalyzeValidatorConfig();
+		public DataAnalyzerConfig DataAnalyzer = new DataAnalyzerConfig();
+		public ValidationReporterConfig ValidationReporter = new ValidationReporterConfig();
 		public AnalyzeReporterConfig AnalyzeReporter = new AnalyzeReporterConfig();
 	}
 

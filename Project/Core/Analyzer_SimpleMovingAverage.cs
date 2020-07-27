@@ -24,6 +24,9 @@ namespace Core
 
 			public static Result Analyze(Info Info)
 			{
+				if (!ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.Enabled)
+					return null;
+
 				DataTable data = Info.HistoryData;
 
 				DataTable[] smaDataTables = new DataTable[HistoryCount.Length];

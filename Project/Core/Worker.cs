@@ -4,6 +4,11 @@ namespace Core
 {
 	public abstract class Worker
 	{
+		public abstract bool Enabled
+		{
+			get;
+		}
+
 		public abstract float WorkHour
 		{
 			get;

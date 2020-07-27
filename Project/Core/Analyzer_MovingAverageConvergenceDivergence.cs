@@ -33,6 +33,9 @@ namespace Core
 
 			public static Result Analyze(Info Info)
 			{
+				if (!ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.Enabled)
+					return null;
+
 				DataTable data = Info.HistoryData;
 
 				DataTable chartData = GenerateData(data);

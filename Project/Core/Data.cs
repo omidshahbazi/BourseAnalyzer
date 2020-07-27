@@ -25,7 +25,8 @@ namespace Core
 			MIGRATION_BOURSE_2020072005,
 			MIGRATION_BOURSE_2020072101,
 			MIGRATION_BOURSE_2020072301,
-			MIGRATION_BOURSE_2020072601 };
+			MIGRATION_BOURSE_2020072601,
+			MIGRATION_BOURSE_2020072701 };
 
 		private static readonly string[] MIGRATIONS_NAME = new string[] {
 			"Migration_Bourse_2020071101",
@@ -44,7 +45,8 @@ namespace Core
 			"Migration_Bourse_2020072005",
 			"Migration_Bourse_2020072101",
 			"Migration_Bourse_2020072301",
-			"Migration_Bourse_2020072601" };
+			"Migration_Bourse_2020072601",
+			"Migration_Bourse_2020072701" };
 
 		private const string MIGRATION_BOURSE_2020071101 = @"
 			CREATE TABLE `stocks` (
@@ -220,6 +222,10 @@ namespace Core
 		private const string MIGRATION_BOURSE_2020072601 = @"
 			ALTER TABLE `traders` 
 			CHANGE COLUMN `email` `emails` TEXT NOT NULL ;";
+
+		private const string MIGRATION_BOURSE_2020072701 = @"
+			ALTER TABLE `traders` 
+			ADD COLUMN `is_admin` INT NOT NULL AFTER `send_full_sell_report`;";
 
 		public static Database Database
 		{

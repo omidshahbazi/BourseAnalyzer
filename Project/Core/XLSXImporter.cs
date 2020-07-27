@@ -21,7 +21,7 @@ namespace Core
 				string symbol = row["symbol"].ToString();
 				string name = row["name"].ToString();
 
-				stocksTable.DefaultView.RowFilter = "symbol='" + symbol + "'";
+				stocksTable.DefaultView.RowFilter = string.Format("symbol='{0}'", symbol);
 				if (stocksTable.DefaultView.Count != 0)
 					continue;
 
@@ -50,7 +50,7 @@ namespace Core
 				int last = Convert.ToInt32(row["last"]);
 				int close = Convert.ToInt32(row["close"]);
 
-				stocksTable.DefaultView.RowFilter = "symbol='" + symbol + "'";
+				stocksTable.DefaultView.RowFilter = string.Format("symbol='{0}'", symbol);
 				int stockID = Convert.ToInt32(stocksTable.DefaultView[0]["id"]);
 
 				builder.Append("INSERT INTO snapshots(stock_id, take_time, count, volume, value, open, first, high, low, last, close) VALUES(");

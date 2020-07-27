@@ -8,7 +8,7 @@ namespace Core
 {
 	public class Manager
 	{
-		private static readonly Worker[] workers = new Worker[] { new DataUpdater(), new AnalyzeValidator(), new DataAnalyzer(), new AnalyzeReporter() };
+		private static readonly Worker[] workers = new Worker[] { new DataUpdater(), new AnalyzeValidator(), new DataAnalyzer(), new AnalyzeReporter(), new ValidationReporter() };
 
 		public void Run()
 		{
@@ -53,7 +53,7 @@ namespace Core
 					if (nextScheduleTime.DayOfWeek == DayOfWeek.Friday)
 						nextScheduleTime = nextScheduleTime.Date.AddDays(1);
 
-					workerSchedulesData.DefaultView.RowFilter = "'" + nextScheduleTime.ToDatabaseDateTime() + "'<=schedule_time AND schedule_time<='" + nextScheduleTime.AddDays(1).ToDatabaseDateTime() + "'";
+					workerSchedulesData.DefaultView.RowFilter = string.Format("'{0}'<=schedule_time AND schedule_time<='{1}'", nextScheduleTime.ToDatabaseDateTime(), nextScheduleTime.AddDays(1).ToDatabaseDateTime());
 					if (workerSchedulesData.DefaultView.Count == 0)
 					{
 						query.Append("INSERT INTO worker_schedules(name, schedule_time, done) VALUES(");
