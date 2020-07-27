@@ -19,10 +19,10 @@ namespace Core
 		public override bool Do(DateTime CurrentDateTime)
 		{
 			DateTime startTime = CurrentDateTime.Date.AddDays(-1);
-			if (CurrentDateTime.DayOfWeek == DayOfWeek.Saturday)
+			if (CurrentDateTime.DayOfWeek == DayOfWeek.Friday)
 				startTime = startTime.AddDays(-2);
 
-			DataTable analyzesData = Data.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=DATE(@date)", "date", startTime);
+			DataTable analyzesData = Data.QueryDataTable("SELECT s.name, s.symbol, a.action, v.was_valid FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id INNER JOIN analyzes_validation v ON a.id=v.analyze_id WHERE DATE(a.analyze_time)=DATE(@date)", "date", startTime);
 			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, open, close FROM snapshots WHERE DATE(take_time)=DATE(UTC_TIMESTAMP())");
 
 			StringBuilder query = new StringBuilder();
