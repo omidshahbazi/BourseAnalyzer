@@ -55,6 +55,9 @@ namespace Importer
 
 				for (DateTime curr = from; curr <= to; curr = curr.AddDays(1))
 				{
+					if (curr.DayOfWeek == DayOfWeek.Thursday || curr.DayOfWeek == DayOfWeek.Friday)
+						continue;
+
 					DataTable table = DataDownloader.Download(curr);
 
 					if (table == null)
