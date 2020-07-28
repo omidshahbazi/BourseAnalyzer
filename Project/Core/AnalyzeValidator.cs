@@ -23,7 +23,7 @@ namespace Core
 				startTime = startTime.AddDays(-2);
 
 			DataTable analyzesData = Data.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=DATE(@date)", "date", startTime);
-			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, open, close FROM snapshots WHERE DATE(take_time)=DATE(UTC_TIMESTAMP())");
+			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, open, close FROM snapshots WHERE DATE(take_time)=DATE(@date)", "date", CurrentDateTime);
 
 			StringBuilder query = new StringBuilder();
 

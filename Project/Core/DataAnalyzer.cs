@@ -25,6 +25,11 @@ namespace Core
 			get { return ConfigManager.Config.DataAnalyzer.BacklogCount; }
 		}
 
+		public int MinimumTradeCount
+		{
+			get { return ConfigManager.Config.DataAnalyzer.MinimumTradeCount; }
+		}
+
 		public override bool Do(DateTime CurrentDateTime)
 		{
 			if (BacklogCount < 1)
@@ -53,6 +58,9 @@ namespace Core
 				DataTable historyTable = Data.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close, ((high-low)/2) median FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
 					"stock_id", id,
 					"current_date", CurrentDateTime);
+
+				if (Convert.ToInt32(historyTable.Rows[historyTable.Rows.Count - 1]["count"]) < MinimumTradeCount)
+					continue;
 
 				Analyzer.Info info = new Analyzer.Info { DateTime = CurrentDateTime, ID = id, Symbol = row["symbol"].ToString(), HistoryData = historyTable };
 

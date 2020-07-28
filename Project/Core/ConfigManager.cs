@@ -20,8 +20,8 @@ namespace Core
 		public float HighRSI = 0.7F;
 		public float MaxRSI = 1;
 
-		public bool WriteToCSV = false;
-		public string CSVPath = "Output/RSI/";
+		public bool WriteToFile = false;
+		public string Path = "Output/RSI/";
 	}
 
 	public class MovingAverageConvergenceDivergenceConfig
@@ -32,8 +32,8 @@ namespace Core
 		public int SignalHistoryCount = 9;
 		public int CalculationCount = 90;
 
-		public bool WriteToCSV = false;
-		public string CSVPath = "Output/MACD/";
+		public bool WriteToFile = false;
+		public string Path = "Output/MACD/";
 	}
 
 	public class SimpleMovingAverageConfig
@@ -43,8 +43,8 @@ namespace Core
 		public int FastHistoryCount = 40;
 		public int CalculationCount = 90;
 
-		public bool WriteToCSV = false;
-		public string CSVPath = "Output/MACD/";
+		public bool WriteToFile = false;
+		public string Path = "Output/MACD/";
 	}
 
 	public class AwesomeOscillatoreConfig
@@ -54,14 +54,15 @@ namespace Core
 		public int FastHistoryCount = 34;
 		public int CalculationCount = 90;
 
-		public bool WriteToCSV = false;
-		public string CSVPath = "Output/AO/";
+		public bool WriteToFile = false;
+		public string Path = "Output/AO/";
 	}
 
 	public class DataAnalyzerConfig
 	{
 		public bool Enabled = true;
 		public float WorkHour = 13;
+		public int MinimumTradeCount = 10;
 		public int BacklogCount = 4;
 
 		public RelativeStrengthIndexConfig RelativeStrengthIndex = new RelativeStrengthIndexConfig();
@@ -85,6 +86,9 @@ namespace Core
 		public ushort Port;
 		public string Username;
 		public string Password;
+
+		public bool WriteToFile = false;
+		public string Path = "Output/AnalyzeReport/";
 	}
 
 	public class ValidationReporterConfig
@@ -96,6 +100,9 @@ namespace Core
 		public ushort Port;
 		public string Username;
 		public string Password;
+
+		public bool WriteToFile = false;
+		public string Path = "Output/ValidateReport/";
 	}
 
 	public class Config

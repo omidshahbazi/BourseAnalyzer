@@ -91,7 +91,7 @@ namespace Core
 					}
 				}
 
-				if (ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.WriteToCSV)
+				if (ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.WriteToFile)
 				{
 					DataTable tempData = data.DefaultView.ToTable();
 
@@ -111,7 +111,7 @@ namespace Core
 							tempData.Rows[startIndex + j][columnName] = smaData.Rows[j]["sma"];
 					}
 
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.CSVPath, Info, tempData);
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.Path, Info, tempData);
 				}
 
 				return results;

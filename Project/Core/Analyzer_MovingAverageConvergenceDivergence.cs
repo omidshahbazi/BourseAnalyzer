@@ -85,7 +85,7 @@ namespace Core
 					results[results.Length - 1 - i] = new Result() { Action = action, Worthiness = worthiness };
 				}
 
-				if (ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.WriteToCSV)
+				if (ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.WriteToFile)
 				{
 					DataTable tempData = data.DefaultView.ToTable();
 					tempData.Columns.Add("macd");
@@ -102,7 +102,7 @@ namespace Core
 						tempDataRow["signal"] = chartRow["signal"];
 					}
 
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CSVPath, Info, tempData);
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.Path, Info, tempData);
 				}
 
 				return results;

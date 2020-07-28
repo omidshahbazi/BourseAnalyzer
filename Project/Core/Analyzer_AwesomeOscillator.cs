@@ -62,7 +62,7 @@ namespace Core
 					results[results.Length - 1 - i] = new Result() { Action = action, Worthiness = worthiness };
 				}
 
-				if (ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.WriteToCSV)
+				if (ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.WriteToFile)
 				{
 					DataTable tempData = data.DefaultView.ToTable();
 					tempData.Columns.Add("ao");
@@ -72,7 +72,7 @@ namespace Core
 					for (int i = 0; i < chartData.Rows.Count; ++i)
 						tempData.Rows[startIndex + i]["ao"] = chartData.Rows[i]["ao"];
 
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.CSVPath, Info, tempData);
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.Path, Info, tempData);
 				}
 
 				return results;

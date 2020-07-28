@@ -64,18 +64,10 @@ namespace Core
 
 		private static void WriteCSV(string Dir, Info Info, DataTable Data)
 		{
-			string path = Path.GetFullPath(Dir);
-			path = Path.Combine(path, Info.DateTime.ToString("yyyy-MM-dd"));
-
-			if (!Directory.Exists(path))
-				Directory.CreateDirectory(path);
-
-			path = Path.Combine(path, Info.ID + "_" + Info.Symbol + ".csv");
-
 			StringBuilder builder = new StringBuilder();
 			CSVWriter.Write(builder, 0, 0, Data);
 
-			File.WriteAllText(path, builder.ToString());
+			Helper.WriteToFile(Dir, Info.DateTime, Info.ID + "_" + Info.Symbol + ".csv", builder.ToString());
 		}
 	}
 }

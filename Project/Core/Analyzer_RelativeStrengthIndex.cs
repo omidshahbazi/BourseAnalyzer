@@ -111,7 +111,7 @@ namespace Core
 					results[results.Length - 1 - i] = new Result() { Action = action, Worthiness = worthiness };
 				}
 
-				if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.WriteToCSV)
+				if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.WriteToFile)
 				{
 					DataTable tempData = data.DefaultView.ToTable();
 					tempData.Columns.Add("rsi");
@@ -125,7 +125,7 @@ namespace Core
 						row["rsi"] = rsiData.Rows[i]["rsi"];
 					}
 
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CSVPath, Info, tempData);
+					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Path, Info, tempData);
 				}
 
 				return results;
