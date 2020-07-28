@@ -110,10 +110,9 @@ namespace Core
 				}
 
 				if (availableResultCount > 1)
+				{
 					worthiness /= availableResultCount;
 
-				if (worthiness != 0)
-				{
 					query.Append("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness) VALUES(");
 					query.Append(id);
 					query.Append(",'");
