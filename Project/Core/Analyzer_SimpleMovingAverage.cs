@@ -21,7 +21,7 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.CalculationCount; }
 			}
 
-			public static Result[] Analyze(Info Info)
+			public static Result Analyze(Info Info)
 			{
 				if (!ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.Enabled)
 					return null;
@@ -35,6 +35,7 @@ namespace Core
 				DataTable data = Info.HistoryData;
 
 				DataTable[] smaDataTables = new DataTable[HistoryCount.Length];
+				int maxRowCount = 0;
 
 				for (int i = 0; i < HistoryCount.Length; ++i)
 				{
@@ -46,9 +47,12 @@ namespace Core
 					int calculationCount = Math.Min(Math.Max(ConfigManager.Config.DataAnalyzer.BacklogCount + 1, data.Rows.Count - (historyCount - 1)), CalculationCount);
 
 					smaDataTables[i] = Analyzer.GenerateSMAData(data, "close", historyCount, calculationCount);
+
+					if (smaDataTables[i] != null && maxRowCount < smaDataTables[i].Rows.Count)
+						maxRowCount = smaDataTables[i].Rows.Count;
 				}
 
-				Result[] results = null;
+				Result result = null;
 
 				int shortTermHistoryIndex = Array.IndexOf(HistoryCount, MathHelper.Min(HistoryCount));
 				DataTable shortTermData = smaDataTables[shortTermHistoryIndex];
@@ -58,9 +62,29 @@ namespace Core
 					DataTable longTermData = smaDataTables[longTermHistoryIndex];
 					if (longTermData != null)
 					{
-						results = new Result[ConfigManager.Config.DataAnalyzer.BacklogCount];
+						DataTable tempChartData = new DataTable();
+						for (int i = 0; i < maxRowCount; ++i)
+							tempChartData.Rows.Add();
 
-						for (int i = 0; i < results.Length; ++i)
+						for (int i = 0; i < HistoryCount.Length; ++i)
+						{
+							string columnName = "sma_" + HistoryCount[i];
+
+							tempChartData.Columns.Add(columnName);
+
+							DataTable smaData = smaDataTables[i];
+							if (smaData == null)
+								continue;
+
+							int startIndex = tempChartData.Rows.Count - smaData.Rows.Count;
+
+							for (int j = 0; j < smaData.Rows.Count; ++j)
+								tempChartData.Rows[startIndex + j][columnName] = smaData.Rows[j]["sma"];
+						}
+
+						result = new Result() { Signals = new Signal[ConfigManager.Config.DataAnalyzer.BacklogCount], Data = tempChartData };
+
+						for (int i = 0; i < result.Signals.Length; ++i)
 						{
 							int index = shortTermData.Rows.Count - 1 - i;
 							double prevShortSMA = Convert.ToDouble(shortTermData.Rows[index - 1]["sma"]);
@@ -86,35 +110,35 @@ namespace Core
 								worthiness = 1;
 							}
 
-							results[results.Length - 1 - i] = new Result() { Action = action, Worthiness = worthiness };
+							result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 						}
 					}
 				}
 
-				if (ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.WriteToFile)
-				{
-					DataTable tempData = data.DefaultView.ToTable();
+				//if (ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.WriteToFile)
+				//{
+				//	DataTable tempData = data.DefaultView.ToTable();
 
-					for (int i = 0; i < HistoryCount.Length; ++i)
-					{
-						string columnName = "sma_" + HistoryCount[i];
+				//	for (int i = 0; i < HistoryCount.Length; ++i)
+				//	{
+				//		string columnName = "sma_" + HistoryCount[i];
 
-						tempData.Columns.Add(columnName);
+				//		tempData.Columns.Add(columnName);
 
-						DataTable smaData = smaDataTables[i];
-						if (smaData == null)
-							continue;
+				//		DataTable smaData = smaDataTables[i];
+				//		if (smaData == null)
+				//			continue;
 
-						int startIndex = tempData.Rows.Count - smaData.Rows.Count;
+				//		int startIndex = tempData.Rows.Count - smaData.Rows.Count;
 
-						for (int j = 0; j < smaData.Rows.Count; ++j)
-							tempData.Rows[startIndex + j][columnName] = smaData.Rows[j]["sma"];
-					}
+				//		for (int j = 0; j < smaData.Rows.Count; ++j)
+				//			tempData.Rows[startIndex + j][columnName] = smaData.Rows[j]["sma"];
+				//	}
 
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.Path, Info, tempData);
-				}
+				//	Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.Path, Info, tempData);
+				//}
 
-				return results;
+				return result;
 			}
 		}
 	}

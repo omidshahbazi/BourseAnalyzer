@@ -1,7 +1,6 @@
 ﻿using GameFramework.Common.Utilities;
 using System;
 using System.Data;
-using System.IO;
 using System.Text;
 
 namespace Core
@@ -19,10 +18,16 @@ namespace Core
 			public DataTable HistoryData;
 		}
 
-		public class Result
+		public class Signal
 		{
 			public int Action;
 			public double Worthiness;
+		}
+
+		public class Result
+		{
+			public Signal[] Signals;
+			public DataTable Data;
 		}
 
 		private static DataTable GenerateSMAData(DataTable Data, string ColumnName, int BacklogCount, int CalculationCount)
@@ -60,14 +65,6 @@ namespace Core
 			}
 
 			return smaData;
-		}
-
-		private static void WriteCSV(string Dir, Info Info, DataTable Data)
-		{
-			StringBuilder builder = new StringBuilder();
-			CSVWriter.Write(builder, 0, 0, Data);
-
-			Helper.WriteToFile(Dir, Info.DateTime, Info.ID + "_" + Info.Symbol + ".csv", builder.ToString());
 		}
 	}
 }

@@ -40,7 +40,7 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.MaxRSI; }
 			}
 
-			public static Result[] Analyze(Info Info)
+			public static Result Analyze(Info Info)
 			{
 				if (!ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Enabled)
 					return null;
@@ -65,17 +65,17 @@ namespace Core
 					return null;
 				}
 
-				DataTable rsiData = GenerateRSIData(data);
-				if (rsiData == null)
+				DataTable chartData = GenerateRSIData(data);
+				if (chartData == null)
 					return null;
 
-				Result[] results = new Result[ConfigManager.Config.DataAnalyzer.BacklogCount];
+				Result result = new Result() { Signals = new Signal[ConfigManager.Config.DataAnalyzer.BacklogCount], Data = chartData };
 
-				for (int i = 0; i < results.Length; ++i)
+				for (int i = 0; i < result.Signals.Length; ++i)
 				{
-					int index = rsiData.Rows.Count - 1 - i;
-					double prevRSI = Convert.ToDouble(rsiData.Rows[index - 1]["rsi"]);
-					double currRSI = Convert.ToDouble(rsiData.Rows[index]["rsi"]);
+					int index = chartData.Rows.Count - 1 - i;
+					double prevRSI = Convert.ToDouble(chartData.Rows[index - 1]["rsi"]);
+					double currRSI = Convert.ToDouble(chartData.Rows[index]["rsi"]);
 
 					int action = 0;
 					double worthiness = 0;
@@ -108,27 +108,27 @@ namespace Core
 						}
 					}
 
-					results[results.Length - 1 - i] = new Result() { Action = action, Worthiness = worthiness };
+					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 				}
 
-				if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.WriteToFile)
-				{
-					DataTable tempData = data.DefaultView.ToTable();
-					tempData.Columns.Add("rsi");
+				//if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.WriteToFile)
+				//{
+				//	DataTable tempData = data.DefaultView.ToTable();
+				//	tempData.Columns.Add("rsi");
 
-					int startIndex = tempData.Rows.Count - rsiData.Rows.Count;
+				//	int startIndex = tempData.Rows.Count - rsiData.Rows.Count;
 
-					for (int i = 0; i < rsiData.Rows.Count; ++i)
-					{
-						DataRow row = tempData.Rows[startIndex + i];
+				//	for (int i = 0; i < rsiData.Rows.Count; ++i)
+				//	{
+				//		DataRow row = tempData.Rows[startIndex + i];
 
-						row["rsi"] = rsiData.Rows[i]["rsi"];
-					}
+				//		row["rsi"] = rsiData.Rows[i]["rsi"];
+				//	}
 
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Path, Info, tempData);
-				}
+				//	Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Path, Info, tempData);
+				//}
 
-				return results;
+				return result;
 			}
 
 			private static DataTable GenerateRSIData(DataTable Data)

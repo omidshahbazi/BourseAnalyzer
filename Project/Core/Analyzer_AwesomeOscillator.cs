@@ -25,7 +25,7 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.CalculationCount; }
 			}
 
-			public static Result[] Analyze(Info Info)
+			public static Result Analyze(Info Info)
 			{
 				if (!ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.Enabled)
 					return null;
@@ -36,9 +36,9 @@ namespace Core
 				if (chartData == null)
 					return null;
 
-				Result[] results = new Result[ConfigManager.Config.DataAnalyzer.BacklogCount];
+				Result result = new Result() { Signals = new Signal[ConfigManager.Config.DataAnalyzer.BacklogCount], Data = chartData };
 
-				for (int i = 0; i < results.Length; ++i)
+				for (int i = 0; i < result.Signals.Length; ++i)
 				{
 					int index = chartData.Rows.Count - 1 - i;
 
@@ -59,23 +59,23 @@ namespace Core
 						worthiness = 1;
 					}
 
-					results[results.Length - 1 - i] = new Result() { Action = action, Worthiness = worthiness };
+					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 				}
 
-				if (ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.WriteToFile)
-				{
-					DataTable tempData = data.DefaultView.ToTable();
-					tempData.Columns.Add("ao");
+				//if (ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.WriteToFile)
+				//{
+				//	DataTable tempData = data.DefaultView.ToTable();
+				//	tempData.Columns.Add("ao");
 
-					int startIndex = tempData.Rows.Count - chartData.Rows.Count;
+				//	int startIndex = tempData.Rows.Count - chartData.Rows.Count;
 
-					for (int i = 0; i < chartData.Rows.Count; ++i)
-						tempData.Rows[startIndex + i]["ao"] = chartData.Rows[i]["ao"];
+				//	for (int i = 0; i < chartData.Rows.Count; ++i)
+				//		tempData.Rows[startIndex + i]["ao"] = chartData.Rows[i]["ao"];
 
-					Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.Path, Info, tempData);
-				}
+				//	Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.Path, Info, tempData);
+				//}
 
-				return results;
+				return result;
 			}
 
 			private static DataTable GenerateData(DataTable Data)
