@@ -43,8 +43,8 @@ namespace Core
 						{
 							ConsoleHelper.WriteInfo("{0} is working on {1}", workerName, scheduleTime);
 
-							//if (!worker.Do(scheduleTime))
-							//	break;
+							if (!worker.Do(scheduleTime))
+								break;
 
 							ConsoleHelper.WriteInfo("{0} done", workerName);
 						}
