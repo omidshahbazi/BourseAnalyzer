@@ -12,6 +12,11 @@ namespace Core
 			get { return ConfigManager.Config.AnalyzeValidator.PreviousAnalyzes; }
 		}
 
+		public int DayGapCount
+		{
+			get { return ConfigManager.Config.AnalyzeValidator.DayGapCount; }
+		}
+
 		public override bool Enabled
 		{
 			get { return ConfigManager.Config.AnalyzeValidator.Enabled; }
@@ -31,12 +36,12 @@ namespace Core
 			}
 
 
-			DateTime startTime = CurrentDateTime.Date.AddDays(-PreviousAnalyzes);
-			if (startTime.DayOfWeek == DayOfWeek.Friday)
-				startTime = startTime.AddDays(-2);
+			DateTime alanyzeTime = CurrentDateTime.Date.AddDays(-PreviousAnalyzes);
+			if (alanyzeTime.DayOfWeek == DayOfWeek.Friday)
+				alanyzeTime = alanyzeTime.AddDays(-2);
 
-			DataTable analyzesData = Data.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=DATE(@date)", "date", startTime);
-			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, close FROM snapshots WHERE DATE(take_time) IN(DATE(@start_time), DATE(@date)) ORDER BY take_time", "start_time", startTime, "date", CurrentDateTime);
+			DataTable analyzesData = Data.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=DATE(@time)", "time", alanyzeTime);
+			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, DATE(take_time) take_time, close FROM snapshots WHERE DATE(take_time)>=DATE(@analyze_time) ORDER BY take_time", "analyze_time", alanyzeTime);
 
 			StringBuilder query = new StringBuilder();
 
@@ -45,10 +50,16 @@ namespace Core
 				DataRow analyzeRow = analyzesData.Rows[i];
 
 				snapshotsData.DefaultView.RowFilter = string.Format("stock_id={0}", analyzeRow["stock_id"]);
-				if (snapshotsData.DefaultView.Count < 2)
+				if (snapshotsData.DefaultView.Count < 2) 
 					continue;
 
-				int stockTrendeSign = Math.Sign(Convert.ToInt32(snapshotsData.DefaultView[snapshotsData.DefaultView.Count - 1]["close"]) - Convert.ToInt32(snapshotsData.DefaultView[0]["close"]));
+				DataRowView analyzeDateSnapshotRow = snapshotsData.DefaultView[0];
+				DataRowView afterAnalyzeDateSnapshotRow = snapshotsData.DefaultView[1];
+
+				if ((Convert.ToDateTime(afterAnalyzeDateSnapshotRow["take_time"]) - Convert.ToDateTime(analyzeDateSnapshotRow["take_time"])).Days > DayGapCount)
+					continue;
+
+				int stockTrendeSign = Math.Sign(Convert.ToInt32(afterAnalyzeDateSnapshotRow["close"]) - Convert.ToInt32(analyzeDateSnapshotRow["close"]));
 
 				int actionSign = Math.Sign(Convert.ToInt32(analyzeRow["action"]));
 

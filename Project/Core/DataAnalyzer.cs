@@ -72,7 +72,12 @@ namespace Core
 					"stock_id", id,
 					"current_date", CurrentDateTime);
 
-				if (historyTable.Rows.Count == 0 || Convert.ToInt32(historyTable.Rows[historyTable.Rows.Count - 1]["count"]) < MinimumTradeCount)
+				if (historyTable.Rows.Count == 0)
+					continue;
+
+				DataRow lastRow = historyTable.Rows[historyTable.Rows.Count - 1];
+
+				if (Convert.ToInt32(lastRow["count"]) < MinimumTradeCount || Convert.ToDateTime(lastRow["take_time"]).Date != CurrentDateTime)
 					continue;
 
 				Analyzer.Info info = new Analyzer.Info { DateTime = CurrentDateTime, ID = id, Symbol = row["symbol"].ToString(), HistoryData = historyTable };

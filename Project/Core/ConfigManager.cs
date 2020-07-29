@@ -13,6 +13,7 @@ namespace Core
 	public class AnalyzeValidatorConfig
 	{
 		public int PreviousAnalyzes = 1;
+		public int DayGapCount = 7;
 		public bool Enabled = true;
 		public float WorkHour = 13;
 	}
@@ -26,6 +27,7 @@ namespace Core
 		public float MidRSI = 0.5F;
 		public float HighRSI = 0.7F;
 		public float MaxRSI = 1;
+		public float IgnoreThreshold = 0.05F;
 	}
 
 	public class MovingAverageConvergenceDivergenceConfig

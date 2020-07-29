@@ -40,6 +40,11 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.MaxRSI; }
 			}
 
+			private static float IgnoreThreshold
+			{
+				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.IgnoreThreshold; }
+			}
+
 			public static Result Analyze(Info Info)
 			{
 				if (!ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Enabled)
@@ -80,7 +85,7 @@ namespace Core
 					int action = 0;
 					double worthiness = 0;
 
-					if (Math.Abs(currRSI - prevRSI) >= 0.05F * MaxRSI)
+					if (Math.Abs(currRSI - prevRSI) >= IgnoreThreshold)
 					{
 						if (prevRSI <= LowRSI && LowRSI < currRSI)
 						{
