@@ -77,7 +77,7 @@ namespace Core
 
 				DataRow lastRow = historyTable.Rows[historyTable.Rows.Count - 1];
 
-				if (Convert.ToInt32(lastRow["count"]) < MinimumTradeCount || Convert.ToDateTime(lastRow["take_time"]).Date != CurrentDateTime)
+				if (Convert.ToInt32(lastRow["count"]) < MinimumTradeCount || Convert.ToDateTime(lastRow["take_time"]).Date != CurrentDateTime.Date)
 					continue;
 
 				Analyzer.Info info = new Analyzer.Info { DateTime = CurrentDateTime, ID = id, Symbol = row["symbol"].ToString(), HistoryData = historyTable };

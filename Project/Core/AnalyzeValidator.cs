@@ -35,7 +35,6 @@ namespace Core
 				return false;
 			}
 
-
 			DateTime alanyzeTime = CurrentDateTime.Date.AddDays(-PreviousAnalyzes);
 			if (alanyzeTime.DayOfWeek == DayOfWeek.Friday)
 				alanyzeTime = alanyzeTime.AddDays(-2);
