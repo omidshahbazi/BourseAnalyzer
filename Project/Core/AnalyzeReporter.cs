@@ -146,7 +146,7 @@ namespace Core
 				if (ConfigManager.Config.AnalyzeReporter.WriteToFile)
 					Helper.WriteToFile(ConfigManager.Config.AnalyzeReporter.Path, CurrentDateTime, name + ".html", body);
 
-				return Helper.SendEmail(string.Format("Suggested Trades on {0}", actionTime.ToPersianDate()), body, emailsArr, name);
+				Helper.SendEmail(string.Format("Suggested Trades on {0}", actionTime.ToPersianDate()), body, emailsArr, name);
 			}
 
 			return true;

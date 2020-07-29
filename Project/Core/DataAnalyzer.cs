@@ -51,6 +51,8 @@ namespace Core
 			StringBuilder query = new StringBuilder();
 			for (int i = 0; i < stocksTable.Rows.Count; ++i)
 			{
+				++totalProcessedCount;
+
 				DataRow row = stocksTable.Rows[i];
 
 				int id = Convert.ToInt32(row["id"]);
@@ -124,7 +126,7 @@ namespace Core
 					query.Append(");");
 				}
 
-				int percent = (int)(++totalProcessedCount / (float)stocksTable.Rows.Count * 100);
+				int percent = (int)(totalProcessedCount / (float)stocksTable.Rows.Count * 100);
 				if (lastPercent != percent)
 				{
 					ConsoleHelper.WriteInfo("Analyzing data {0}%", percent);
