@@ -80,31 +80,34 @@ namespace Core
 					int action = 0;
 					double worthiness = 0;
 
-					if (prevRSI <= LowRSI && LowRSI < currRSI)
+					if (Math.Abs(currRSI - prevRSI) >= 0.05F * MaxRSI)
 					{
-						action = 1;
-						worthiness = (LowRSI - prevRSI) / LowRSI;
-					}
-					if (HighRSI <= prevRSI && currRSI < HighRSI)
-					{
-						action = -1;
-						worthiness = (prevRSI - HighRSI) / (MaxRSI - HighRSI);
-					}
-					else
-					{
-						index = data.Rows.Count - 1;
-						double prevClose = Convert.ToDouble(data.Rows[index - 1]["close"]);
-						double currClose = Convert.ToDouble(data.Rows[index]["close"]);
-
-						if (prevRSI <= MidRSI && MidRSI < currRSI && prevClose < currClose)
+						if (prevRSI <= LowRSI && LowRSI < currRSI)
 						{
 							action = 1;
-							worthiness = (currRSI - prevRSI) / MaxRSI;
+							worthiness = (LowRSI - prevRSI) / LowRSI;
 						}
-						else if (MidRSI <= prevRSI && currRSI < MidRSI && prevClose > currClose)
+						if (HighRSI <= prevRSI && currRSI < HighRSI)
 						{
 							action = -1;
-							worthiness = (prevRSI - currRSI) / MaxRSI;
+							worthiness = (prevRSI - HighRSI) / (MaxRSI - HighRSI);
+						}
+						else
+						{
+							index = data.Rows.Count - 1;
+							double prevClose = Convert.ToDouble(data.Rows[index - 1]["close"]);
+							double currClose = Convert.ToDouble(data.Rows[index]["close"]);
+
+							if (prevRSI <= MidRSI && MidRSI < currRSI && prevClose < currClose)
+							{
+								action = 1;
+								worthiness = (currRSI - prevRSI) / MaxRSI;
+							}
+							else if (MidRSI <= prevRSI && currRSI < MidRSI && prevClose > currClose)
+							{
+								action = -1;
+								worthiness = (prevRSI - currRSI) / MaxRSI;
+							}
 						}
 					}
 

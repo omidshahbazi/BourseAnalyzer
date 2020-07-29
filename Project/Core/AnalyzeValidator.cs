@@ -45,7 +45,7 @@ namespace Core
 				DataRow analyzeRow = analyzesData.Rows[i];
 
 				snapshotsData.DefaultView.RowFilter = string.Format("stock_id={0}", analyzeRow["stock_id"]);
-				if (snapshotsData.DefaultView.Count < 1)
+				if (snapshotsData.DefaultView.Count < 2)
 					continue;
 
 				int stockTrendeSign = Math.Sign(Convert.ToInt32(snapshotsData.DefaultView[snapshotsData.DefaultView.Count - 1]["close"]) - Convert.ToInt32(snapshotsData.DefaultView[0]["close"]));
