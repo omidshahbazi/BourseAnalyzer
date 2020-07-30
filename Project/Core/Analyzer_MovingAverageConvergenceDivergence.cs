@@ -68,6 +68,25 @@ namespace Core
 				if (chartData == null)
 					return null;
 
+				for (int i = 0; i < PostPeriodCount; ++i)
+				{
+					int index = chartData.Rows.Count - 1 - i;
+
+					if (index < 1)
+						break;
+
+					double prevMACD = Convert.ToDouble(chartData.Rows[index - 1]["macd"]);
+					double currMACD = Convert.ToDouble(chartData.Rows[index]["macd"]);
+
+					double prevSignal = Convert.ToDouble(chartData.Rows[index - 1]["signal"]);
+					double currSignal = Convert.ToDouble(chartData.Rows[index]["signal"]);
+
+					int action = 0;
+					double worthiness = 0;
+					if (Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action, out worthiness))
+						return null;
+				}
+
 				Result result = new Result() { Signals = new Signal[ConfigManager.Config.DataAnalyzer.BacklogCount], Data = chartData };
 
 				for (int i = 0; i < result.Signals.Length; ++i)
@@ -89,55 +108,38 @@ namespace Core
 						double threshold = (close == 0 ? 0 : Math.Abs(currMACD - currSignal) / close);
 						if (PostPeriodCount == 0 || threshold >= IgnoreThreshold)
 						{
-							if ((prevMACD <= prevSignal && currMACD > currSignal) ||
-								(prevMACD < prevSignal && currMACD >= currSignal))
-							{
-								action = 1;
-								worthiness = 1;
-							}
-							else if ((prevMACD >= prevSignal && currMACD < currSignal) ||
-									 (prevMACD > prevSignal && currMACD <= currSignal))
-							{
-								action = -1;
-								worthiness = 1;
-							}
-							else if ((prevMACD <= 0 && 0 < currMACD) ||
-									 (prevMACD < 0 && 0 <= currMACD))
-							{
-								action = 1;
-								worthiness = 0.5F;
-							}
-							else if ((prevMACD >= 0 && 0 > currMACD) ||
-									  (prevMACD > 0 && 0 >= currMACD))
-							{
-								action = -1;
-								worthiness = 0.5F;
-							}
+							if (!Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action, out worthiness))
+								Analyzer.CheckPointCrossover(prevMACD, currMACD, 0, out action, out worthiness);
+
+							//if ((prevMACD <= prevSignal && currMACD > currSignal) ||
+							//	(prevMACD < prevSignal && currMACD >= currSignal))
+							//{
+							//	action = 1;
+							//	worthiness = 1;
+							//}
+							//else if ((prevMACD >= prevSignal && currMACD < currSignal) ||
+							//		 (prevMACD > prevSignal && currMACD <= currSignal))
+							//{
+							//	action = -1;
+							//	worthiness = 1;
+							//}
+							//else if ((prevMACD <= 0 && 0 < currMACD) ||
+							//		 (prevMACD < 0 && 0 <= currMACD))
+							//{
+							//	action = 1;
+							//	worthiness = 0.5F;
+							//}
+							//else if ((prevMACD >= 0 && 0 > currMACD) ||
+							//		  (prevMACD > 0 && 0 >= currMACD))
+							//{
+							//	action = -1;
+							//	worthiness = 0.5F;
+							//}
 						}
 					}
 
 					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 				}
-
-				//if (ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.WriteToFile)
-				//{
-				//	DataTable tempData = data.DefaultView.ToTable();
-				//	tempData.Columns.Add("macd");
-				//	tempData.Columns.Add("signal");
-
-				//	int startIndex = tempData.Rows.Count - chartData.Rows.Count;
-
-				//	for (int i = 0; i < chartData.Rows.Count; ++i)
-				//	{
-				//		DataRow chartRow = chartData.Rows[i];
-				//		DataRow tempDataRow = tempData.Rows[startIndex + i];
-
-				//		tempDataRow["macd"] = chartRow["macd"];
-				//		tempDataRow["signal"] = chartRow["signal"];
-				//	}
-
-				//	Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.Path, Info, tempData);
-				//}
 
 				return result;
 			}

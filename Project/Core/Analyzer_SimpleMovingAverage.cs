@@ -96,47 +96,25 @@ namespace Core
 
 							int action = 0;
 							double worthiness = 0;
+							Analyzer.CheckCrossover(prevShortSMA, currShortSMA, prevLongSMA, currLongSMA, out action, out worthiness);
 
-							if ((prevShortSMA <= prevLongSMA && currShortSMA > currLongSMA) ||
-								(prevShortSMA < prevLongSMA && currShortSMA >= currLongSMA))
-							{
-								action = 1;
-								worthiness = 1;
-							}
-							else if ((prevShortSMA >= prevLongSMA && currShortSMA < currLongSMA) ||
-									 (prevShortSMA > prevLongSMA && currShortSMA <= currLongSMA))
-							{
-								action = -1;
-								worthiness = 1;
-							}
+							//if ((prevShortSMA <= prevLongSMA && currShortSMA > currLongSMA) ||
+							//	(prevShortSMA < prevLongSMA && currShortSMA >= currLongSMA))
+							//{
+							//	action = 1;
+							//	worthiness = 1;
+							//}
+							//else if ((prevShortSMA >= prevLongSMA && currShortSMA < currLongSMA) ||
+							//		 (prevShortSMA > prevLongSMA && currShortSMA <= currLongSMA))
+							//{
+							//	action = -1;
+							//	worthiness = 1;
+							//}
 
 							result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 						}
 					}
 				}
-
-				//if (ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.WriteToFile)
-				//{
-				//	DataTable tempData = data.DefaultView.ToTable();
-
-				//	for (int i = 0; i < HistoryCount.Length; ++i)
-				//	{
-				//		string columnName = "sma_" + HistoryCount[i];
-
-				//		tempData.Columns.Add(columnName);
-
-				//		DataTable smaData = smaDataTables[i];
-				//		if (smaData == null)
-				//			continue;
-
-				//		int startIndex = tempData.Rows.Count - smaData.Rows.Count;
-
-				//		for (int j = 0; j < smaData.Rows.Count; ++j)
-				//			tempData.Rows[startIndex + j][columnName] = smaData.Rows[j]["sma"];
-				//	}
-
-				//	Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.Path, Info, tempData);
-				//}
 
 				return result;
 			}

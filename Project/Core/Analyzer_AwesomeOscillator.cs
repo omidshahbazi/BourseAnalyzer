@@ -47,33 +47,21 @@ namespace Core
 
 					int action = 0;
 					double worthiness = 0;
+					Analyzer.CheckPointCrossover(prevAO, currAO, 0, out action, out worthiness);
 
-					if (prevAO <= 0 && 0 < currAO)
-					{
-						action = 1;
-						worthiness = 1;
-					}
-					else if (prevAO >= 0 && 0 > currAO)
-					{
-						action = -1;
-						worthiness = 1;
-					}
+					//if (prevAO <= 0 && 0 < currAO)
+					//{
+					//	action = 1;
+					//	worthiness = 1;
+					//}
+					//else if (prevAO >= 0 && 0 > currAO)
+					//{
+					//	action = -1;
+					//	worthiness = 1;
+					//}
 
 					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 				}
-
-				//if (ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.WriteToFile)
-				//{
-				//	DataTable tempData = data.DefaultView.ToTable();
-				//	tempData.Columns.Add("ao");
-
-				//	int startIndex = tempData.Rows.Count - chartData.Rows.Count;
-
-				//	for (int i = 0; i < chartData.Rows.Count; ++i)
-				//		tempData.Rows[startIndex + i]["ao"] = chartData.Rows[i]["ao"];
-
-				//	Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.Path, Info, tempData);
-				//}
 
 				return result;
 			}

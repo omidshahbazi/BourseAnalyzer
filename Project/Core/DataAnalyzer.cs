@@ -90,6 +90,7 @@ namespace Core
 				DataRow row = stocksTable.Rows[i];
 
 				int id = Convert.ToInt32(row["id"]);
+
 				DataTable historyTable = Data.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close, ((high-low)/2) median FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
 					"stock_id", id,
 					"current_date", CurrentDateTime);
@@ -112,32 +113,23 @@ namespace Core
 				}
 
 				double buyWorthiness = 0;
-				int confirmedBuySignalCount = 0;
 				float buySignalPower = 0;
-				FindSignal(results, 1, out buyWorthiness, out confirmedBuySignalCount, out buySignalPower);
+				FindSignal(results, 1, out buyWorthiness, out buySignalPower);
 
 				double sellWorthiness = 0;
-				int confirmedSellSignalCount = 0;
 				float sellSignalPower = 0;
-				FindSignal(results, -1, out sellWorthiness, out confirmedSellSignalCount, out sellSignalPower);
+				FindSignal(results, -1, out sellWorthiness, out sellSignalPower);
 
 				Debug.Assert(buySignalPower == 0 || buySignalPower != sellSignalPower);
 
-				int confirmedSignalCount = 0;
 				double worthiness = 0;
 
 				if (buySignalPower > sellSignalPower)
-				{
-					confirmedSignalCount = confirmedBuySignalCount;
 					worthiness = buyWorthiness;
-				}
 				else
-				{
-					confirmedSignalCount = confirmedSellSignalCount;
 					worthiness = sellWorthiness;
-				}
 
-				if (confirmedSignalCount >= SignalConfirmationCount)
+				if (worthiness != 0)
 				{
 					query.Append("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness) VALUES(");
 					query.Append(id);
@@ -182,11 +174,12 @@ namespace Core
 			return true;
 		}
 
-		private static void FindSignal(Analyzer.Result[] Results, int Action, out double Worthiness, out int ConfirmedSignalCount, out float SignalPower)
+		private static void FindSignal(Analyzer.Result[] Results, int Action, out double Worthiness, out float SignalPower)
 		{
 			Worthiness = 0;
-			ConfirmedSignalCount = 0;
 			SignalPower = 0;
+
+			int confirmedSignalCount = 0;
 
 			int lastSingalIndex = BacklogCount - 1;
 
@@ -233,7 +226,7 @@ namespace Core
 							break;
 
 						Worthiness += refSignal.Action * refSignal.Worthiness;
-						++ConfirmedSignalCount;
+						++confirmedSignalCount;
 						SignalPower += (l + 1) / (float)BacklogCount;
 
 						break;
@@ -241,13 +234,13 @@ namespace Core
 				}
 			}
 
-			if (ConfirmedSignalCount < ConfigManager.Config.DataAnalyzer.SignalConfirmationCount)
+			if (confirmedSignalCount < ConfigManager.Config.DataAnalyzer.SignalConfirmationCount)
 			{
 				SignalPower = 0;
 				return;
 			}
 
-			Worthiness /= (ConfirmedSignalCount + 1);
+			Worthiness /= (confirmedSignalCount + 1);
 			SignalPower /= Results.Length;
 		}
 

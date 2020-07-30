@@ -103,38 +103,46 @@ namespace Core
 							double prevClose = Convert.ToDouble(data.Rows[index - 1]["close"]);
 							double currClose = Convert.ToDouble(data.Rows[index]["close"]);
 
-							if (prevRSI <= MidRSI && MidRSI < currRSI && prevClose < currClose)
+							if (Analyzer.CheckPointCrossover(prevRSI, currRSI, MidRSI, out action, out worthiness))
 							{
-								action = 1;
-								worthiness = (currRSI - prevRSI) / MaxRSI;
-							}
-							else if (MidRSI <= prevRSI && currRSI < MidRSI && prevClose > currClose)
-							{
-								action = -1;
-								worthiness = (prevRSI - currRSI) / MaxRSI;
+								if (prevClose >= currClose)
+									action = 0;
+								else if (prevClose <= currClose)
+									action = 0;
 							}
 						}
+
+						//if (prevRSI <= LowRSI && LowRSI < currRSI)
+						//{
+						//	action = 1;
+						//	worthiness = (LowRSI - prevRSI) / LowRSI;
+						//}
+						//if (HighRSI <= prevRSI && currRSI < HighRSI)
+						//{
+						//	action = -1;
+						//	worthiness = (prevRSI - HighRSI) / (MaxRSI - HighRSI);
+						//}
+						//else
+						//{
+						//	index = data.Rows.Count - 1;
+						//	double prevClose = Convert.ToDouble(data.Rows[index - 1]["close"]);
+						//	double currClose = Convert.ToDouble(data.Rows[index]["close"]);
+
+						//	if (prevRSI <= MidRSI && MidRSI < currRSI && prevClose < currClose)
+						//	{
+						//		action = 1;
+						//		worthiness = (currRSI - prevRSI) / MaxRSI;
+						//	}
+						//	else if (MidRSI <= prevRSI && currRSI < MidRSI && prevClose > currClose)
+						//	{
+						//		action = -1;
+						//		worthiness = (prevRSI - currRSI) / MaxRSI;
+						//	}
+						//}
 					}
 
 					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 				}
-
-				//if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.WriteToFile)
-				//{
-				//	DataTable tempData = data.DefaultView.ToTable();
-				//	tempData.Columns.Add("rsi");
-
-				//	int startIndex = tempData.Rows.Count - rsiData.Rows.Count;
-
-				//	for (int i = 0; i < rsiData.Rows.Count; ++i)
-				//	{
-				//		DataRow row = tempData.Rows[startIndex + i];
-
-				//		row["rsi"] = rsiData.Rows[i]["rsi"];
-				//	}
-
-				//	Analyzer.WriteCSV(ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Path, Info, tempData);
-				//}
 
 				return result;
 			}
