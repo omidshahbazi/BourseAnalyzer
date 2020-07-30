@@ -1,6 +1,7 @@
 ﻿using GameFramework.Common.Utilities;
 using System;
 using System.Data;
+using System.Diagnostics;
 
 namespace Core
 {
@@ -103,13 +104,15 @@ namespace Core
 							double prevClose = Convert.ToDouble(data.Rows[index - 1]["close"]);
 							double currClose = Convert.ToDouble(data.Rows[index]["close"]);
 
-							if (Analyzer.CheckPointCrossover(prevRSI, currRSI, MidRSI, out action, out worthiness))
+							if (Analyzer.CheckPointCrossover(prevRSI, currRSI, MidRSI, out action))
 							{
 								if (prevClose >= currClose)
 									action = 0;
 								else if (prevClose <= currClose)
 									action = 0;
 							}
+
+							Debug.Assert(false, "Calculate worthiness like MACD");
 						}
 					}
 

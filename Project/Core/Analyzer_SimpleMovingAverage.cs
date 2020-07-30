@@ -1,6 +1,7 @@
 ﻿using GameFramework.Common.Utilities;
 using System;
 using System.Data;
+using System.Diagnostics;
 
 namespace Core
 {
@@ -75,7 +76,9 @@ namespace Core
 
 					int action = 0;
 					double worthiness = 0;
-					Analyzer.CheckCrossover(prevFastSMA, currFastSMA, prevSlowSMA, currSlowSMA, out action, out worthiness);
+					Analyzer.CheckCrossover(prevFastSMA, currFastSMA, prevSlowSMA, currSlowSMA, out action);
+
+					Debug.Assert(false, "Calculate worthiness like MACD");
 
 					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 				}

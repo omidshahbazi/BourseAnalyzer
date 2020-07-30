@@ -12,25 +12,6 @@ namespace Core
 {
 	static class Helper
 	{
-		public static double CalculateChanges(DataTable SnapshotsData, int StockID, DateTime PreviousDate, DateTime CurrentDate)
-		{
-			SnapshotsData.DefaultView.RowFilter = string.Format("stock_id={0} AND take_time='{1}'", StockID, PreviousDate.Date.ToDatabaseDateTime());
-			if (SnapshotsData.DefaultView.Count != 0)
-			{
-				int prevClose = Convert.ToInt32(SnapshotsData.DefaultView[0]["close"]);
-
-				SnapshotsData.DefaultView.RowFilter = string.Format("stock_id={0} AND take_time='{1}'", StockID, CurrentDate.Date.ToDatabaseDateTime());
-				if (SnapshotsData.DefaultView.Count != 0)
-				{
-					int currClose = Convert.ToInt32(SnapshotsData.DefaultView[0]["close"]);
-
-					return (currClose / (double)prevClose) - 1;
-				}
-			}
-
-			return double.NaN;
-		}
-
 		public static bool SendEmail(string Subject, string HTMLBody, ISerializeArray EmailsArray, string Name)
 		{
 			MailMessage message = new MailMessage();

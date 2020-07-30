@@ -79,9 +79,7 @@ namespace Core
 			{
 				DataRow row = Data.Rows[i];
 
-				double changes = Helper.CalculateChanges(SnapshotsData, Convert.ToInt32(row["stock_id"]), StartTime, CurrentTime);
-
-				WriteTableRow(Builder, i + 1, row["name"].ToString(), row["symbol"].ToString(), Convert.ToInt32(row["action"]), changes);
+				WriteTableRow(Builder, i + 1, row["name"].ToString(), row["symbol"].ToString(), Convert.ToInt32(row["action"]));
 			}
 
 			HTMLGenerator.EndTable(Builder);
@@ -91,27 +89,29 @@ namespace Core
 		{
 			HTMLGenerator.BeginTable(Builder);
 			HTMLGenerator.BeginTableHeader(Builder);
+
 			HTMLGenerator.BeginTableRow(Builder);
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, "No.");
 			HTMLGenerator.EndTableData(Builder);
+
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, "Name");
 			HTMLGenerator.EndTableData(Builder);
+
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, "Symbol");
 			HTMLGenerator.EndTableData(Builder);
+
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, "Action");
 			HTMLGenerator.EndTableData(Builder);
-			HTMLGenerator.BeginTableData(Builder);
-			HTMLGenerator.WriteContent(Builder, "Changes(%)");
-			HTMLGenerator.EndTableData(Builder);
+
 			HTMLGenerator.EndTableRow(Builder);
 			HTMLGenerator.EndTableHeader(Builder);
 		}
 
-		private static void WriteTableRow(StringBuilder Builder, int Number, string Name, string Symbol, int Action, double Changes)
+		private static void WriteTableRow(StringBuilder Builder, int Number, string Name, string Symbol, int Action)
 		{
 			HTMLGenerator.BeginTableRow(Builder);
 
@@ -130,11 +130,6 @@ namespace Core
 			HTMLGenerator.Style.Color = (Action == 1 ? Color.Green : Color.Red);
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, (Action == 1 ? "Buy" : "Sell"));
-			HTMLGenerator.EndTableData(Builder);
-
-			HTMLGenerator.Style.Color = (double.IsNaN(Changes) ? Color.Black : (Changes > 0 ? Color.Green : Color.Red));
-			HTMLGenerator.BeginTableData(Builder);
-			HTMLGenerator.WriteContent(Builder, double.IsNaN(Changes) ? "N/A" : (Changes * 100).ToString());
 			HTMLGenerator.EndTableData(Builder);
 
 			HTMLGenerator.EndTableRow(Builder);

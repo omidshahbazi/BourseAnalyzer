@@ -82,8 +82,7 @@ namespace Core
 					double currSignal = Convert.ToDouble(chartData.Rows[index]["signal"]);
 
 					int action = 0;
-					double worthiness = 0;
-					if (Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action, out worthiness)) //TODO: remove worthiness and add percent
+					if (Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action))
 						return null;
 				}
 
@@ -108,8 +107,15 @@ namespace Core
 						double threshold = (close == 0 ? 0 : Math.Abs(currMACD - currSignal) / close);
 						if (PostPeriodCount == 0 || threshold >= IgnoreThreshold)
 						{
-							if (!Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action, out worthiness))
-								Analyzer.CheckPointCrossover(prevMACD, currMACD, 0, out action, out worthiness);
+							if (!Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action))
+								Analyzer.CheckPointCrossover(prevMACD, currMACD, 0, out action);
+
+							if (action != 0)
+							{
+								DataTable smaData = Analyzer.GenerateSimpleMovingAverageData(data, "close", 9, 2);
+
+								worthiness = Math.Abs((Convert.ToDouble(smaData.Rows[1]["sma"]) / Convert.ToDouble(smaData.Rows[0]["sma"])) - 1);
+							}
 						}
 					}
 

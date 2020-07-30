@@ -30,22 +30,19 @@ namespace Core
 			public DataTable Data;
 		}
 
-		private static bool CheckCrossover(double AveragePrevious, double AverageCurrent, double SignalPrevious, double SignalCurrent, out int Direction, out double Penetration)
+		private static bool CheckCrossover(double AveragePrevious, double AverageCurrent, double SignalPrevious, double SignalCurrent, out int Direction)
 		{
 			Direction = 0;
-			Penetration = 0;
 
 			if ((AveragePrevious <= SignalPrevious && AverageCurrent > SignalCurrent) ||
 				(AveragePrevious < SignalPrevious && AverageCurrent >= SignalCurrent))
 			{
 				Direction = 1;
-				Penetration = 1;
 			}
 			else if ((AveragePrevious >= SignalPrevious && AverageCurrent < SignalCurrent) ||
 					 (AveragePrevious > SignalPrevious && AverageCurrent <= SignalCurrent))
 			{
 				Direction = -1;
-				Penetration = 1;
 			}
 			else
 				return false;
@@ -53,22 +50,19 @@ namespace Core
 			return true;
 		}
 
-		private static bool CheckPointCrossover(double AveragePrevious, double AverageCurrent, double SignalPoint, out int Direction, out double Penetration)
+		private static bool CheckPointCrossover(double AveragePrevious, double AverageCurrent, double SignalPoint, out int Direction)
 		{
 			Direction = 0;
-			Penetration = 0;
 
 			if ((AveragePrevious <= SignalPoint && SignalPoint < AverageCurrent) ||
 				(AveragePrevious < SignalPoint && SignalPoint <= AverageCurrent))
 			{
 				Direction = 1;
-				Penetration = 0.5F;
 			}
 			else if ((AveragePrevious >= SignalPoint && SignalPoint > AverageCurrent) ||
 					  (AveragePrevious > SignalPoint && SignalPoint >= AverageCurrent))
 			{
 				Direction = -1;
-				Penetration = 0.5F;
 			}
 			else
 				return false;

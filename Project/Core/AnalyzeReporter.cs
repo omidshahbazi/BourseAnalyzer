@@ -50,9 +50,7 @@ namespace Core
 				{
 					DataRow row = buyAnalyzeData.Rows[i];
 
-					double changes = CalculateChanges(analyzesData, snapshotsData, -1, Convert.ToInt32(row["stock_id"]), CurrentDateTime);
-
-					WriteTableRow(fullBuyText, i + 1, row["name"].ToString(), row["symbol"].ToString(), changes, Convert.ToDouble(row["worthiness"]));
+					WriteTableRow(fullBuyText, i + 1, row["name"].ToString(), row["symbol"].ToString(), Convert.ToDouble(row["worthiness"]));
 				}
 
 				HTMLGenerator.EndTable(fullBuyText);
@@ -71,9 +69,7 @@ namespace Core
 				{
 					DataRow row = sellAnalyzeData.Rows[i];
 
-					double changes = CalculateChanges(analyzesData, snapshotsData, 1, Convert.ToInt32(row["stock_id"]), CurrentDateTime);
-
-					WriteTableRow(fullSellText, i + 1, row["name"].ToString(), row["symbol"].ToString(), changes, Convert.ToDouble(row["worthiness"]));
+					WriteTableRow(fullSellText, i + 1, row["name"].ToString(), row["symbol"].ToString(), Convert.ToDouble(row["worthiness"]));
 				}
 
 				HTMLGenerator.EndTable(fullBuyText);
@@ -125,9 +121,7 @@ namespace Core
 							{
 								DataRowView sellRow = sellAnalyzeData.DefaultView[0];
 
-								double changes = CalculateChanges(analyzesData, snapshotsData, 1, Convert.ToInt32(sellRow["stock_id"]), CurrentDateTime);
-
-								WriteTableRow(emailBody, ++sellCount, sellRow["name"].ToString(), sellRow["symbol"].ToString(), changes, Convert.ToDouble(sellRow["worthiness"]));
+								WriteTableRow(emailBody, ++sellCount, sellRow["name"].ToString(), sellRow["symbol"].ToString(), Convert.ToDouble(sellRow["worthiness"]));
 							}
 						}
 
@@ -152,40 +146,33 @@ namespace Core
 			return true;
 		}
 
-		private static double CalculateChanges(DataTable AnalyzesData, DataTable SnapshotsData, int PreviousAction, int StockID, DateTime CurrentDate)
-		{
-			AnalyzesData.DefaultView.RowFilter = string.Format("stock_id={0} AND action={1} AND analyze_time<'{2}'", StockID, PreviousAction, CurrentDate.Date.ToDatabaseDateTime());
-			if (AnalyzesData.DefaultView.Count != 0)
-				return Helper.CalculateChanges(SnapshotsData, StockID, Convert.ToDateTime(AnalyzesData.DefaultView[0]["analyze_time"]), CurrentDate);
-
-			return double.NaN;
-		}
-
 		private static void BeginTable(StringBuilder Builder)
 		{
 			HTMLGenerator.BeginTable(Builder);
 			HTMLGenerator.BeginTableHeader(Builder);
+
 			HTMLGenerator.BeginTableRow(Builder);
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, "No.");
 			HTMLGenerator.EndTableData(Builder);
+
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, "Name");
 			HTMLGenerator.EndTableData(Builder);
+
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, "Symbol");
 			HTMLGenerator.EndTableData(Builder);
-			HTMLGenerator.BeginTableData(Builder);
-			HTMLGenerator.WriteContent(Builder, "Changes(%)");
-			HTMLGenerator.EndTableData(Builder);
+
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, "Worthiness(%)");
 			HTMLGenerator.EndTableData(Builder);
+
 			HTMLGenerator.EndTableRow(Builder);
 			HTMLGenerator.EndTableHeader(Builder);
 		}
 
-		private static void WriteTableRow(StringBuilder Builder, int Number, string Name, string Symbol, double Changes, double Worthiness)
+		private static void WriteTableRow(StringBuilder Builder, int Number, string Name, string Symbol, double Worthiness)
 		{
 			HTMLGenerator.BeginTableRow(Builder);
 			HTMLGenerator.BeginTableData(Builder);
@@ -196,9 +183,6 @@ namespace Core
 			HTMLGenerator.EndTableData(Builder);
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, Symbol);
-			HTMLGenerator.EndTableData(Builder);
-			HTMLGenerator.BeginTableData(Builder);
-			HTMLGenerator.WriteContent(Builder, double.IsNaN(Changes) ? "N/A" : ((int)(Changes * 100)).ToString());
 			HTMLGenerator.EndTableData(Builder);
 			HTMLGenerator.BeginTableData(Builder);
 			HTMLGenerator.WriteContent(Builder, (int)(Worthiness * 100));
