@@ -12,8 +12,6 @@ namespace Core
 
 	public class AnalyzeValidatorConfig
 	{
-		public int PreviousAnalyzes = 1;
-		public int DayGapCount = 7;
 		public bool Enabled = true;
 		public float WorkHour = 13;
 	}

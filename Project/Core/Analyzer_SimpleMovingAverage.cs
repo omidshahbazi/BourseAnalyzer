@@ -46,7 +46,7 @@ namespace Core
 
 					int calculationCount = Math.Min(Math.Max(ConfigManager.Config.DataAnalyzer.BacklogCount + 1, data.Rows.Count - (historyCount - 1)), CalculationCount);
 
-					smaDataTables[i] = Analyzer.GenerateSMAData(data, "close", historyCount, calculationCount);
+					smaDataTables[i] = Analyzer.GenerateSimpleMovingAverageData(data, "close", historyCount, calculationCount);
 
 					if (smaDataTables[i] != null && maxRowCount < smaDataTables[i].Rows.Count)
 						maxRowCount = smaDataTables[i].Rows.Count;

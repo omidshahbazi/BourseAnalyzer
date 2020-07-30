@@ -97,8 +97,8 @@ namespace Core
 				DataTable chartData = new DataTable();
 				chartData.Columns.Add("ao", typeof(double));
 
-				DataTable slowSMAData = Analyzer.GenerateSMAData(Data, "median", SlowHistoryCount, calculationCount);
-				DataTable fastSMAData = Analyzer.GenerateSMAData(Data, "median", FastHistoryCount, calculationCount);
+				DataTable slowSMAData = Analyzer.GenerateSimpleMovingAverageData(Data, "median", SlowHistoryCount, calculationCount);
+				DataTable fastSMAData = Analyzer.GenerateSimpleMovingAverageData(Data, "median", FastHistoryCount, calculationCount);
 
 				if (slowSMAData == null || fastSMAData == null)
 					return null;

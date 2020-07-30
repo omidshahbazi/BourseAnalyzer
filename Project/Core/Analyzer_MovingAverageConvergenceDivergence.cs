@@ -83,7 +83,7 @@ namespace Core
 
 					int action = 0;
 					double worthiness = 0;
-					if (Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action, out worthiness))
+					if (Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action, out worthiness)) //TODO: remove worthiness and add percent
 						return null;
 				}
 

@@ -5,20 +5,8 @@ using System.Text;
 
 namespace Core
 {
-	//TODO: think about how to validate more currectly
-	//TODO: use SMA(9) to validate movement direction of analyzes
 	public class AnalyzeValidator : Worker
 	{
-		public static int PreviousAnalyzes
-		{
-			get { return ConfigManager.Config.AnalyzeValidator.PreviousAnalyzes; }
-		}
-
-		public static int DayGapCount
-		{
-			get { return ConfigManager.Config.AnalyzeValidator.DayGapCount; }
-		}
-
 		public override bool Enabled
 		{
 			get { return ConfigManager.Config.AnalyzeValidator.Enabled; }
@@ -31,20 +19,14 @@ namespace Core
 
 		public override bool Do(DateTime CurrentDateTime)
 		{
-			if (PreviousAnalyzes < 1)
-			{
-				ConsoleHelper.WriteError("PreviousAnalyzes must be grater than 1, current value is {0}", PreviousAnalyzes);
-				return false;
-			}
-
-			DateTime analyzeTime = CurrentDateTime.Date.AddDays(-PreviousAnalyzes);
+			DateTime analyzeTime = CurrentDateTime.Date.AddDays(-1);
 			if (analyzeTime.DayOfWeek == DayOfWeek.Friday)
 				analyzeTime = analyzeTime.AddDays(-1);
 			if (analyzeTime.DayOfWeek == DayOfWeek.Thursday)
 				analyzeTime = analyzeTime.AddDays(-1);
 
 			DataTable analyzesData = Data.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=DATE(@time)", "time", analyzeTime);
-			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, DATE(take_time) take_time, close FROM snapshots WHERE DATE(take_time)>=DATE(@analyze_time) ORDER BY take_time", "analyze_time", analyzeTime);
+			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, DATE(take_time) take_time, close FROM snapshots WHERE DATE(take_time)<=DATE(@analyze_time) ORDER BY take_time", "analyze_time", analyzeTime);
 
 			StringBuilder query = new StringBuilder();
 
@@ -53,18 +35,12 @@ namespace Core
 				DataRow analyzeRow = analyzesData.Rows[i];
 
 				snapshotsData.DefaultView.RowFilter = string.Format("stock_id={0}", analyzeRow["stock_id"]);
-				if (snapshotsData.DefaultView.Count < PreviousAnalyzes + 1)
+				DataTable smaData = Analyzer.GenerateSimpleMovingAverageData(snapshotsData.DefaultView.ToTable(), "close", 9, 2);
+				if (smaData == null)
 					continue;
-
-				DataRowView analyzeDateSnapshotRow = snapshotsData.DefaultView[0];
-				DataRowView afterAnalyzeDateSnapshotRow = snapshotsData.DefaultView[PreviousAnalyzes];
-
-				if ((Convert.ToDateTime(afterAnalyzeDateSnapshotRow["take_time"]) - Convert.ToDateTime(analyzeDateSnapshotRow["take_time"])).Days > PreviousAnalyzes + DayGapCount)
-					continue;
-
-				int stockTrendeSign = Math.Sign(Convert.ToInt32(afterAnalyzeDateSnapshotRow["close"]) - Convert.ToInt32(analyzeDateSnapshotRow["close"]));
 
 				int actionSign = Math.Sign(Convert.ToInt32(analyzeRow["action"]));
+				int stockTrendeSign = Math.Sign(Convert.ToInt32(smaData.Rows[smaData.Rows.Count - 1]["sma"]) - Convert.ToInt32(smaData.Rows[smaData.Rows.Count - 2]["sma"]));
 
 				query.Append("INSERT INTO analyzes_validation(analyze_id, was_valid) VALUES(");
 				query.Append(analyzeRow["id"]);

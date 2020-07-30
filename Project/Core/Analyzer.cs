@@ -30,7 +30,7 @@ namespace Core
 			public DataTable Data;
 		}
 
-		private static DataTable GenerateSMAData(DataTable Data, string ColumnName, int BacklogCount, int CalculationCount)
+		public static DataTable GenerateSimpleMovingAverageData(DataTable Data, string ColumnName, int BacklogCount, int CalculationCount)
 		{
 			if (BacklogCount < 1)
 			{
