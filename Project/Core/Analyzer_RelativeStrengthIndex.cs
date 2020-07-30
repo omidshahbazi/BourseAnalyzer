@@ -111,34 +111,6 @@ namespace Core
 									action = 0;
 							}
 						}
-
-						//if (prevRSI <= LowRSI && LowRSI < currRSI)
-						//{
-						//	action = 1;
-						//	worthiness = (LowRSI - prevRSI) / LowRSI;
-						//}
-						//if (HighRSI <= prevRSI && currRSI < HighRSI)
-						//{
-						//	action = -1;
-						//	worthiness = (prevRSI - HighRSI) / (MaxRSI - HighRSI);
-						//}
-						//else
-						//{
-						//	index = data.Rows.Count - 1;
-						//	double prevClose = Convert.ToDouble(data.Rows[index - 1]["close"]);
-						//	double currClose = Convert.ToDouble(data.Rows[index]["close"]);
-
-						//	if (prevRSI <= MidRSI && MidRSI < currRSI && prevClose < currClose)
-						//	{
-						//		action = 1;
-						//		worthiness = (currRSI - prevRSI) / MaxRSI;
-						//	}
-						//	else if (MidRSI <= prevRSI && currRSI < MidRSI && prevClose > currClose)
-						//	{
-						//		action = -1;
-						//		worthiness = (prevRSI - currRSI) / MaxRSI;
-						//	}
-						//}
 					}
 
 					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };

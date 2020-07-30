@@ -49,17 +49,6 @@ namespace Core
 					double worthiness = 0;
 					Analyzer.CheckPointCrossover(prevAO, currAO, 0, out action, out worthiness);
 
-					//if (prevAO <= 0 && 0 < currAO)
-					//{
-					//	action = 1;
-					//	worthiness = 1;
-					//}
-					//else if (prevAO >= 0 && 0 > currAO)
-					//{
-					//	action = -1;
-					//	worthiness = 1;
-					//}
-
 					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 				}
 

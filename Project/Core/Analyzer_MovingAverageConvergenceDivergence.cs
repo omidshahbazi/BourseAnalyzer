@@ -110,31 +110,6 @@ namespace Core
 						{
 							if (!Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action, out worthiness))
 								Analyzer.CheckPointCrossover(prevMACD, currMACD, 0, out action, out worthiness);
-
-							//if ((prevMACD <= prevSignal && currMACD > currSignal) ||
-							//	(prevMACD < prevSignal && currMACD >= currSignal))
-							//{
-							//	action = 1;
-							//	worthiness = 1;
-							//}
-							//else if ((prevMACD >= prevSignal && currMACD < currSignal) ||
-							//		 (prevMACD > prevSignal && currMACD <= currSignal))
-							//{
-							//	action = -1;
-							//	worthiness = 1;
-							//}
-							//else if ((prevMACD <= 0 && 0 < currMACD) ||
-							//		 (prevMACD < 0 && 0 <= currMACD))
-							//{
-							//	action = 1;
-							//	worthiness = 0.5F;
-							//}
-							//else if ((prevMACD >= 0 && 0 > currMACD) ||
-							//		  (prevMACD > 0 && 0 >= currMACD))
-							//{
-							//	action = -1;
-							//	worthiness = 0.5F;
-							//}
 						}
 					}
 
@@ -178,59 +153,24 @@ namespace Core
 					return null;
 
 				DataTable chartData = new DataTable();
-				chartData.Columns.Add("slow_ema", typeof(double));
-				chartData.Columns.Add("fast_ema", typeof(double));
 				chartData.Columns.Add("macd", typeof(double));
 				chartData.Columns.Add("signal", typeof(double));
-				for (int i = 0; i < requiredCount; ++i)
-					chartData.Rows.Add(0, 0, 0, 0);
 
-				CalculateExponentialMovingAverage(Data, chartData, "close", "slow_ema", calculationCount + SignalHistoryCount, SlowHistoryCount);
-				CalculateExponentialMovingAverage(Data, chartData, "close", "fast_ema", calculationCount + SignalHistoryCount, FastHistoryCount);
+				DataTable slowEMAData = Analyzer.GenerateExponentialMovingAverage(Data, "close", SlowHistoryCount, calculationCount + SignalHistoryCount);
+				DataTable fastEMAData = Analyzer.GenerateExponentialMovingAverage(Data, "close", FastHistoryCount, calculationCount + SignalHistoryCount);
 
-				for (int i = 0; i < chartData.Rows.Count; ++i)
-				{
-					DataRow row = chartData.Rows[i];
+				for (int i = 0; i < slowEMAData.Rows.Count; ++i)
+					chartData.Rows.Add(Convert.ToDouble(fastEMAData.Rows[i]["ema"]) - Convert.ToDouble(slowEMAData.Rows[i]["ema"]), 0);
 
-					row["macd"] = Convert.ToDouble(row["fast_ema"]) - Convert.ToDouble(row["slow_ema"]);
-				}
-
-				for (int i = 0; i < SlowHistoryCount; ++i)
-					chartData.Rows.RemoveAt(0);
-
-				CalculateExponentialMovingAverage(chartData, chartData, "macd", "signal", calculationCount, SignalHistoryCount);
-
-				chartData.Columns.Remove("slow_ema");
-				chartData.Columns.Remove("fast_ema");
+				DataTable signaEMAData = Analyzer.GenerateExponentialMovingAverage(chartData, "macd", SignalHistoryCount, calculationCount);
 
 				for (int i = 0; i < SignalHistoryCount; ++i)
 					chartData.Rows.RemoveAt(0);
 
+				for (int i = 0; i < chartData.Rows.Count; ++i)
+					chartData.Rows[i]["signal"] = signaEMAData.Rows[i]["ema"];
+
 				return chartData;
-			}
-
-			private static void CalculateExponentialMovingAverage(DataTable Data, DataTable ChartData, string SourceColumnName, string ResultColumnName, int CalculationCount, int HistoryCount)
-			{
-				double k = 2 / (float)(HistoryCount + 1);
-
-				int startIndex = Data.Rows.Count - CalculationCount - HistoryCount;
-
-				double lastEMA = 0;
-				for (int i = 0; i < HistoryCount; ++i)
-					lastEMA += Convert.ToInt32(Data.Rows[startIndex + i][SourceColumnName]);
-				lastEMA /= HistoryCount;
-
-				startIndex = Data.Rows.Count - CalculationCount;
-				int chartDataStartIndex = ChartData.Rows.Count - CalculationCount;
-
-				for (int i = 0; i < CalculationCount; ++i)
-				{
-					double ema = (Convert.ToInt32(Data.Rows[startIndex + i][SourceColumnName]) * k) + (lastEMA * (1 - k));
-
-					ChartData.Rows[chartDataStartIndex + i][ResultColumnName] = ema;
-
-					lastEMA = ema;
-				}
 			}
 		}
 	}

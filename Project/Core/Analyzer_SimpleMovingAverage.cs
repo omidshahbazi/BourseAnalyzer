@@ -11,9 +11,14 @@ namespace Core
 			//https://commodity.com/technical-analysis/ma-simple/
 			//https://www.dummies.com/personal-finance/investing/stocks-trading/how-to-calculate-simple-moving-average-in-trading/
 
-			private static int[] HistoryCount
+			private static int SlowHistoryCount
 			{
-				get { return ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.HistoryCount; }
+				get { return ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.SlowHistoryCount; }
+			}
+
+			private static int FastHistoryCount
+			{
+				get { return ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.FastHistoryCount; }
 			}
 
 			private static int CalculationCount
@@ -34,86 +39,45 @@ namespace Core
 
 				DataTable data = Info.HistoryData;
 
-				DataTable[] smaDataTables = new DataTable[HistoryCount.Length];
 				int maxRowCount = 0;
 
-				for (int i = 0; i < HistoryCount.Length; ++i)
+				int calculationCount = Math.Min(Math.Max(ConfigManager.Config.DataAnalyzer.BacklogCount + 1, data.Rows.Count - (SlowHistoryCount - 1)), CalculationCount);
+				DataTable slowSMAData = Analyzer.GenerateSimpleMovingAverageData(data, "close", SlowHistoryCount, calculationCount);
+
+				calculationCount = Math.Min(Math.Max(ConfigManager.Config.DataAnalyzer.BacklogCount + 1, data.Rows.Count - (FastHistoryCount - 1)), CalculationCount);
+				DataTable fastSMAData = Analyzer.GenerateSimpleMovingAverageData(data, "close", FastHistoryCount, calculationCount);
+
+				DataTable tempChartData = new DataTable();
+				tempChartData.Columns.Add("sma_" + SlowHistoryCount);
+				tempChartData.Columns.Add("sma_" + FastHistoryCount);
+				for (int i = 0; i < maxRowCount; ++i)
+					tempChartData.Rows.Add();
+
+				int startIndex = tempChartData.Rows.Count - slowSMAData.Rows.Count;
+				for (int j = 0; j < slowSMAData.Rows.Count; ++j)
+					tempChartData.Rows[startIndex + j][0] = slowSMAData.Rows[j]["sma"];
+
+				startIndex = tempChartData.Rows.Count - fastSMAData.Rows.Count;
+				for (int j = 0; j < fastSMAData.Rows.Count; ++j)
+					tempChartData.Rows[startIndex + j][0] = fastSMAData.Rows[j]["sma"];
+
+				Result result = new Result() { Signals = new Signal[ConfigManager.Config.DataAnalyzer.BacklogCount], Data = tempChartData };
+
+				for (int i = 0; i < result.Signals.Length; ++i)
 				{
-					int historyCount = HistoryCount[i];
+					int index = fastSMAData.Rows.Count - 1 - i;
+					double prevFastSMA = Convert.ToDouble(fastSMAData.Rows[index - 1]["sma"]);
+					double currFastSMA = Convert.ToDouble(fastSMAData.Rows[index]["sma"]);
 
-					if (data.Rows.Count < historyCount + 1)
-						return null;
+					index = slowSMAData.Rows.Count - 1 - i;
+					double prevSlowSMA = Convert.ToDouble(slowSMAData.Rows[index - 1]["sma"]);
+					double currSlowSMA = Convert.ToDouble(slowSMAData.Rows[index]["sma"]);
 
-					int calculationCount = Math.Min(Math.Max(ConfigManager.Config.DataAnalyzer.BacklogCount + 1, data.Rows.Count - (historyCount - 1)), CalculationCount);
+					int action = 0;
+					double worthiness = 0;
+					Analyzer.CheckCrossover(prevFastSMA, currFastSMA, prevSlowSMA, currSlowSMA, out action, out worthiness);
 
-					smaDataTables[i] = Analyzer.GenerateSimpleMovingAverageData(data, "close", historyCount, calculationCount);
-
-					if (smaDataTables[i] != null && maxRowCount < smaDataTables[i].Rows.Count)
-						maxRowCount = smaDataTables[i].Rows.Count;
-				}
-
-				Result result = null;
-
-				int shortTermHistoryIndex = Array.IndexOf(HistoryCount, MathHelper.Min(HistoryCount));
-				DataTable shortTermData = smaDataTables[shortTermHistoryIndex];
-				if (shortTermData != null)
-				{
-					int longTermHistoryIndex = Array.IndexOf(HistoryCount, MathHelper.Max(HistoryCount));
-					DataTable longTermData = smaDataTables[longTermHistoryIndex];
-					if (longTermData != null)
-					{
-						DataTable tempChartData = new DataTable();
-						for (int i = 0; i < maxRowCount; ++i)
-							tempChartData.Rows.Add();
-
-						for (int i = 0; i < HistoryCount.Length; ++i)
-						{
-							string columnName = "sma_" + HistoryCount[i];
-
-							tempChartData.Columns.Add(columnName);
-
-							DataTable smaData = smaDataTables[i];
-							if (smaData == null)
-								continue;
-
-							int startIndex = tempChartData.Rows.Count - smaData.Rows.Count;
-
-							for (int j = 0; j < smaData.Rows.Count; ++j)
-								tempChartData.Rows[startIndex + j][columnName] = smaData.Rows[j]["sma"];
-						}
-
-						result = new Result() { Signals = new Signal[ConfigManager.Config.DataAnalyzer.BacklogCount], Data = tempChartData };
-
-						for (int i = 0; i < result.Signals.Length; ++i)
-						{
-							int index = shortTermData.Rows.Count - 1 - i;
-							double prevShortSMA = Convert.ToDouble(shortTermData.Rows[index - 1]["sma"]);
-							double currShortSMA = Convert.ToDouble(shortTermData.Rows[index]["sma"]);
-
-							index = longTermData.Rows.Count - 1 - i;
-							double prevLongSMA = Convert.ToDouble(longTermData.Rows[index - 1]["sma"]);
-							double currLongSMA = Convert.ToDouble(longTermData.Rows[index]["sma"]);
-
-							int action = 0;
-							double worthiness = 0;
-							Analyzer.CheckCrossover(prevShortSMA, currShortSMA, prevLongSMA, currLongSMA, out action, out worthiness);
-
-							//if ((prevShortSMA <= prevLongSMA && currShortSMA > currLongSMA) ||
-							//	(prevShortSMA < prevLongSMA && currShortSMA >= currLongSMA))
-							//{
-							//	action = 1;
-							//	worthiness = 1;
-							//}
-							//else if ((prevShortSMA >= prevLongSMA && currShortSMA < currLongSMA) ||
-							//		 (prevShortSMA > prevLongSMA && currShortSMA <= currLongSMA))
-							//{
-							//	action = -1;
-							//	worthiness = 1;
-							//}
-
-							result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
-						}
-					}
+					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
 				}
 
 				return result;

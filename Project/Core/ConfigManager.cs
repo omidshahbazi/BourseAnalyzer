@@ -18,7 +18,7 @@ namespace Core
 
 	public class RelativeStrengthIndexConfig
 	{
-		public bool Enabled = true;
+		public bool Enabled = false;
 		public int HistoryCount = 14;
 		public int CalculationCount = 90;
 		public float LowRSI = 0.3F;
@@ -41,15 +41,15 @@ namespace Core
 
 	public class SimpleMovingAverageConfig
 	{
-		public bool Enabled = true;
-		public int[] HistoryCount = new int[] { 14, 31 };
-		public int FastHistoryCount = 40;
+		public bool Enabled = false;
+		public int SlowHistoryCount = 31;
+		public int FastHistoryCount = 14;
 		public int CalculationCount = 90;
 	}
 
 	public class AwesomeOscillatoreConfig
 	{
-		public bool Enabled = true;
+		public bool Enabled = false;
 		public int SlowHistoryCount = 5;
 		public int FastHistoryCount = 34;
 		public int CalculationCount = 90;
