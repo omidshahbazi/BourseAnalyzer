@@ -1,7 +1,6 @@
 ﻿using GameFramework.Common.Utilities;
 using System;
 using System.Data;
-using System.Text;
 
 namespace Core
 {

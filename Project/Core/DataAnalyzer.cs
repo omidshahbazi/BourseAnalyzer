@@ -35,25 +35,6 @@ namespace Core
 			get { return ConfigManager.Config.DataAnalyzer.SignalConfirmationCount; }
 		}
 
-		public static int EnabledAnalyzerCount
-		{
-			get
-			{
-				int count = 0;
-
-				if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Enabled)
-					++count;
-				if (ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.Enabled)
-					++count;
-				if (ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.Enabled)
-					++count;
-				if (ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.Enabled)
-					++count;
-
-				return count;
-			}
-		}
-		//TODO: log 
 		public override bool Do(DateTime CurrentDateTime)
 		{
 			if (BacklogCount < 1)
