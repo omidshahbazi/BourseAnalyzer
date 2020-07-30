@@ -185,7 +185,7 @@ namespace Core
 			HTMLGenerator.WriteContent(Builder, Symbol);
 			HTMLGenerator.EndTableData(Builder);
 			HTMLGenerator.BeginTableData(Builder);
-			HTMLGenerator.WriteContent(Builder, (int)(Worthiness * 100));
+			HTMLGenerator.WriteContent(Builder, (Worthiness * 100).ToString("N2"));
 			HTMLGenerator.EndTableData(Builder);
 			HTMLGenerator.EndTableRow(Builder);
 		}
