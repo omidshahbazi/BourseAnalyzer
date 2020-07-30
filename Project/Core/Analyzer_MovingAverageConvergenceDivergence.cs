@@ -10,6 +10,10 @@ namespace Core
 		{
 			//https://commodity.com/technical-analysis/macd/
 			//https://fairmontequities.com/how-to-calculate-the-macd/
+			//https://www.wikihow.com/Read-MACDA
+			//https://www.iexplain.org/ema-how-to-calculate/
+			//https://www.brainyforex.com/macd-how-to-reduce-false-signals.html
+			//https://www.daytrading.com/macd
 
 			private static int SlowHistoryCount
 			{
@@ -31,10 +35,32 @@ namespace Core
 				get { return ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.CalculationCount; }
 			}
 
+			private static float IgnoreThreshold
+			{
+				get { return ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.IgnoreThreshold; }
+			}
+
+			private static int PostPeriodCount
+			{
+				get { return ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.PostPeriodCount; }
+			}
+
 			public static Result Analyze(Info Info)
 			{
 				if (!ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.Enabled)
 					return null;
+
+				if (PostPeriodCount < 0)
+				{
+					ConsoleHelper.WriteError("PostPeriodCount cannot be negative, current value is {1}", PostPeriodCount);
+					return null;
+				}
+
+				if (PostPeriodCount != 0 && IgnoreThreshold < 0)
+				{
+					ConsoleHelper.WriteError("IgnoreThreshold must be grater than 0, current value is {1}", IgnoreThreshold);
+					return null;
+				}
 
 				DataTable data = Info.HistoryData;
 
@@ -46,40 +72,48 @@ namespace Core
 
 				for (int i = 0; i < result.Signals.Length; ++i)
 				{
-					int index = chartData.Rows.Count - 1 - i;
-
-					double prevMACD = Convert.ToDouble(chartData.Rows[index - 1]["macd"]);
-					double currMACD = Convert.ToDouble(chartData.Rows[index]["macd"]);
-
-					double prevSignal = Convert.ToDouble(chartData.Rows[index - 1]["signal"]);
-					double currSignal = Convert.ToDouble(chartData.Rows[index]["signal"]);
-
 					int action = 0;
 					double worthiness = 0;
 
-					if ((prevMACD <= prevSignal && currMACD > currSignal) ||
-						(prevMACD < prevSignal && currMACD >= currSignal))
+					int index = chartData.Rows.Count - 1 - i - PostPeriodCount;
+
+					if (index > 0)
 					{
-						action = 1;
-						worthiness = 1;
-					}
-					else if ((prevMACD >= prevSignal && currMACD < currSignal) ||
-							 (prevMACD > prevSignal && currMACD <= currSignal))
-					{
-						action = -1;
-						worthiness = 1;
-					}
-					else if ((prevMACD <= 0 && 0 < currMACD) ||
-							 (prevMACD < 0 && 0 <= currMACD))
-					{
-						action = 1;
-						worthiness = 0.5F;
-					}
-					else if ((prevMACD >= 0 && 0 > currMACD) ||
-							  (prevMACD > 0 && 0 >= currMACD))
-					{
-						action = -1;
-						worthiness = 0.5F;
+						double prevMACD = Convert.ToDouble(chartData.Rows[index - 1]["macd"]);
+						double currMACD = Convert.ToDouble(chartData.Rows[index]["macd"]);
+
+						double prevSignal = Convert.ToDouble(chartData.Rows[index - 1]["signal"]);
+						double currSignal = Convert.ToDouble(chartData.Rows[index]["signal"]);
+
+						int close = Convert.ToInt32(data.Rows[data.Rows.Count - 1 - i]["close"]);
+						double threshold = (close == 0 ? 0 : Math.Abs(currMACD - currSignal) / close);
+						if (PostPeriodCount == 0 || threshold >= IgnoreThreshold)
+						{
+							if ((prevMACD <= prevSignal && currMACD > currSignal) ||
+								(prevMACD < prevSignal && currMACD >= currSignal))
+							{
+								action = 1;
+								worthiness = 1;
+							}
+							else if ((prevMACD >= prevSignal && currMACD < currSignal) ||
+									 (prevMACD > prevSignal && currMACD <= currSignal))
+							{
+								action = -1;
+								worthiness = 1;
+							}
+							else if ((prevMACD <= 0 && 0 < currMACD) ||
+									 (prevMACD < 0 && 0 <= currMACD))
+							{
+								action = 1;
+								worthiness = 0.5F;
+							}
+							else if ((prevMACD >= 0 && 0 > currMACD) ||
+									  (prevMACD > 0 && 0 >= currMACD))
+							{
+								action = -1;
+								worthiness = 0.5F;
+							}
+						}
 					}
 
 					result.Signals[result.Signals.Length - 1 - i] = new Signal() { Action = action, Worthiness = worthiness };
@@ -128,7 +162,7 @@ namespace Core
 					return null;
 				}
 
-				if (CalculationCount < ConfigManager.Config.DataAnalyzer.BacklogCount + 1)
+				if (CalculationCount < ConfigManager.Config.DataAnalyzer.BacklogCount)
 				{
 					ConsoleHelper.WriteError("CalculationCount must be grater than {0}, current value is {1}", ConfigManager.Config.DataAnalyzer.BacklogCount, CalculationCount);
 					return null;

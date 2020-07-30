@@ -7,12 +7,12 @@ namespace Core
 {
 	public class AnalyzeValidator : Worker
 	{
-		public int PreviousAnalyzes
+		public static int PreviousAnalyzes
 		{
 			get { return ConfigManager.Config.AnalyzeValidator.PreviousAnalyzes; }
 		}
 
-		public int DayGapCount
+		public static int DayGapCount
 		{
 			get { return ConfigManager.Config.AnalyzeValidator.DayGapCount; }
 		}

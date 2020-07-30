@@ -37,6 +37,8 @@ namespace Core
 		public int FastHistoryCount = 12;
 		public int SignalHistoryCount = 9;
 		public int CalculationCount = 90;
+		public int PostPeriodCount = 3;
+		public float IgnoreThreshold = 0.003F;
 	}
 
 	public class SimpleMovingAverageConfig

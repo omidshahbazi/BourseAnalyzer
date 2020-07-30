@@ -1,6 +1,5 @@
 ﻿using GameFramework.Common.Utilities;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Text;
@@ -21,19 +20,38 @@ namespace Core
 			get { return ConfigManager.Config.DataAnalyzer.WorkHour; }
 		}
 
-		public int MinimumTradeCount
+		public static int MinimumTradeCount
 		{
 			get { return ConfigManager.Config.DataAnalyzer.MinimumTradeCount; }
 		}
 
-		public int BacklogCount
+		public static int BacklogCount
 		{
 			get { return ConfigManager.Config.DataAnalyzer.BacklogCount; }
 		}
 
-		public int SignalConfirmationCount
+		public static int SignalConfirmationCount
 		{
 			get { return ConfigManager.Config.DataAnalyzer.SignalConfirmationCount; }
+		}
+
+		public static int EnabledAnalyzerCount
+		{
+			get
+			{
+				int count = 0;
+
+				if (ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Enabled)
+					++count;
+				if (ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.Enabled)
+					++count;
+				if (ConfigManager.Config.DataAnalyzer.SimpleMovingAverage.Enabled)
+					++count;
+				if (ConfigManager.Config.DataAnalyzer.AwesomeOscillatore.Enabled)
+					++count;
+
+				return count;
+			}
 		}
 
 		public override bool Do(DateTime CurrentDateTime)
@@ -62,12 +80,16 @@ namespace Core
 			StringBuilder query = new StringBuilder();
 			for (int i = 0; i < stocksTable.Rows.Count; ++i)
 			{
-				++totalProcessedCount;
+				int percent = (int)(++totalProcessedCount / (float)stocksTable.Rows.Count * 100);
+				if (lastPercent != percent)
+				{
+					ConsoleHelper.WriteInfo("Analyzing data {0}%", percent);
+					lastPercent = percent;
+				}
 
 				DataRow row = stocksTable.Rows[i];
 
 				int id = Convert.ToInt32(row["id"]);
-
 				DataTable historyTable = Data.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close, ((high-low)/2) median FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
 					"stock_id", id,
 					"current_date", CurrentDateTime);
@@ -92,12 +114,12 @@ namespace Core
 				double buyWorthiness = 0;
 				int confirmedBuySignalCount = 0;
 				float buySignalPower = 0;
-				FindSignal(results, BacklogCount, 1, out buyWorthiness, out confirmedBuySignalCount, out buySignalPower);
+				FindSignal(results, 1, out buyWorthiness, out confirmedBuySignalCount, out buySignalPower);
 
 				double sellWorthiness = 0;
 				int confirmedSellSignalCount = 0;
 				float sellSignalPower = 0;
-				FindSignal(results, BacklogCount, -1, out sellWorthiness, out confirmedSellSignalCount, out sellSignalPower);
+				FindSignal(results, -1, out sellWorthiness, out confirmedSellSignalCount, out sellSignalPower);
 
 				Debug.Assert(buySignalPower == 0 || buySignalPower != sellSignalPower);
 
@@ -115,10 +137,8 @@ namespace Core
 					worthiness = sellWorthiness;
 				}
 
-				if (confirmedSignalCount >= ConfigManager.Config.DataAnalyzer.SignalConfirmationCount)
+				if (confirmedSignalCount >= SignalConfirmationCount)
 				{
-					worthiness /= (confirmedSignalCount + 1);
-
 					query.Append("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness) VALUES(");
 					query.Append(id);
 					query.Append(",'");
@@ -154,13 +174,6 @@ namespace Core
 
 					WriteCSV(ConfigManager.Config.DataAnalyzer.Path, info, historyTable);
 				}
-
-				int percent = (int)(totalProcessedCount / (float)stocksTable.Rows.Count * 100);
-				if (lastPercent != percent)
-				{
-					ConsoleHelper.WriteInfo("Analyzing data {0}%", percent);
-					lastPercent = percent;
-				}
 			}
 
 			if (query.Length != 0)
@@ -169,7 +182,7 @@ namespace Core
 			return true;
 		}
 
-		private static void FindSignal(Analyzer.Result[] Results, int BacklogCount, int Action, out double Worthiness, out int ConfirmedSignalCount, out float SignalPower)
+		private static void FindSignal(Analyzer.Result[] Results, int Action, out double Worthiness, out int ConfirmedSignalCount, out float SignalPower)
 		{
 			Worthiness = 0;
 			ConfirmedSignalCount = 0;
@@ -228,12 +241,13 @@ namespace Core
 				}
 			}
 
-			if (ConfirmedSignalCount == 0)
+			if (ConfirmedSignalCount < ConfigManager.Config.DataAnalyzer.SignalConfirmationCount)
 			{
 				SignalPower = 0;
 				return;
 			}
 
+			Worthiness /= (ConfirmedSignalCount + 1);
 			SignalPower /= Results.Length;
 		}
 
