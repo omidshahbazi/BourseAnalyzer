@@ -6,6 +6,7 @@ using System.Text;
 namespace Core
 {
 	//TODO: think about how to validate more currectly
+	//TODO: use SMA(9) to validate movement direction of analyzes
 	public class AnalyzeValidator : Worker
 	{
 		public static int PreviousAnalyzes
