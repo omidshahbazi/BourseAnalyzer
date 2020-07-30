@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Core
 {
+	//TODO: think about how to validate more currectly
 	public class AnalyzeValidator : Worker
 	{
 		public static int PreviousAnalyzes
