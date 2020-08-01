@@ -149,6 +149,8 @@ namespace Core
 				}
 			}
 
+			Data.Execute("DELETE FROM analyzes WHERE analyze_time=@time", "time", dateTime);
+
 			if (query.Length != 0)
 				Data.Execute(query.ToString());
 
