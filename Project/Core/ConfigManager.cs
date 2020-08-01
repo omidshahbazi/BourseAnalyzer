@@ -7,19 +7,19 @@ namespace Core
 	public class DataUpdaterConfig
 	{
 		public bool Enabled = true;
-		public float WorkHour = 13;
+		public float WorkHour = 10.5F;
 	}
 
 	public class AnalyzeValidatorConfig
 	{
 		public bool Enabled = true;
-		public float WorkHour = 13;
+		public float WorkHour = 10.75F;
 	}
 
 	public class RelativeStrengthIndexConfig
 	{
 		public bool Enabled = false;
-		public int HistoryCount = 14;
+		public int HistoryCount = 11;
 		public int CalculationCount = 90;
 		public float LowRSI = 0.3F;
 		public float MidRSI = 0.5F;
@@ -58,7 +58,7 @@ namespace Core
 	public class DataAnalyzerConfig
 	{
 		public bool Enabled = true;
-		public float WorkHour = 13;
+		public float WorkHour = 11;
 		public int MinimumTradeCount = 10;
 		public int BacklogCount = 5;
 		public int SignalConfirmationCount = 2;
@@ -75,7 +75,7 @@ namespace Core
 	public class AnalyzeReporterConfig
 	{
 		public bool Enabled = true;
-		public float WorkHour = 13;
+		public float WorkHour = 11.5F;
 
 		public string Host;
 		public ushort Port;
@@ -89,7 +89,7 @@ namespace Core
 	public class ValidationReporterConfig
 	{
 		public bool Enabled = true;
-		public float WorkHour = 13;
+		public float WorkHour = 11.5F;
 
 		public string Host;
 		public ushort Port;
