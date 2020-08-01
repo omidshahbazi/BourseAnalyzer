@@ -22,7 +22,7 @@ namespace Core
 		public override bool Do(DateTime CurrentDateTime)
 		{
 			DateTime startTime = CurrentDateTime.Date.AddDays(-1);
-			if (CurrentDateTime.DayOfWeek == DayOfWeek.Friday)
+			if (startTime.DayOfWeek == DayOfWeek.Friday)
 				startTime = startTime.AddDays(-2);
 
 			DataTable analyzesData = Data.QueryDataTable("SELECT a.stock_id, s.name, s.symbol, a.action, DATE(a.analyze_time) analyze_time, v.was_valid FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id LEFT OUTER JOIN analyzes_validation v ON a.id=v.analyze_id WHERE DATE(a.analyze_time)=DATE(@date) ORDER BY a.worthiness DESC", "date", startTime);

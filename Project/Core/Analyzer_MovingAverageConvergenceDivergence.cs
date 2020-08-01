@@ -107,8 +107,10 @@ namespace Core
 						double threshold = (close == 0 ? 0 : Math.Abs(currMACD - currSignal) / close);
 						if (PostPeriodCount == 0 || threshold >= IgnoreThreshold)
 						{
-							if (!Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action))
-								Analyzer.CheckPointCrossover(prevMACD, currMACD, 0, out action);
+							//if (!Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action))
+							//	Analyzer.CheckPointCrossover(prevMACD, currMACD, 0, out action);
+
+							Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action);
 
 							if (action != 0)
 							{
