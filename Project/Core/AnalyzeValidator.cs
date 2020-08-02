@@ -36,7 +36,7 @@ namespace Core
 				DataRow analyzeRow = analyzesData.Rows[i];
 
 				snapshotsData.DefaultView.RowFilter = string.Format("stock_id={0}", analyzeRow["stock_id"]);
-				DataTable smaData = Analyzer.GenerateSimpleMovingAverageData(snapshotsData.DefaultView.ToTable(), "close", 9, 2);
+				DataTable smaData = Indicator.GenerateSimpleMovingAverageData(snapshotsData.DefaultView.ToTable(), "close", 9, 2);
 				if (smaData == null)
 					continue;
 

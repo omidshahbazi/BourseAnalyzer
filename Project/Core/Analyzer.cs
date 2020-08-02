@@ -1,32 +1,154 @@
-﻿using GameFramework.Common.Utilities;
-using System;
+﻿using System;
 using System.Data;
+using System.Diagnostics;
 
 namespace Core
 {
 	public static partial class Analyzer
 	{
-		public class Info
-		{
-			public DateTime DateTime;
-
-			public int ID;
-
-			public string Symbol;
-
-			public DataTable HistoryData;
-		}
+		private static readonly Func<Indicator.Info, DataTable>[] Indicators = new Func<Indicator.Info, DataTable>[] { Indicator.MovingAverageConvergenceDivergence.Generate, Indicator.RelativeStrengthIndex.Generate };
+		private static readonly Func<Indicator.Info, Result>[] Analyzers = new Func<Indicator.Info, Result>[] { RelativeStrengthIndex.Analyze, MovingAverageConvergenceDivergence.Analyze };
 
 		public class Signal
 		{
-			public int Action;
 			public double Worthiness;
 		}
 
 		public class Result
 		{
 			public Signal[] Signals;
-			public DataTable Data;
+		}
+
+		public class AnalyzeInfo
+		{
+			public double Worthiness;
+		}
+
+		public static AnalyzeInfo Analyze(Indicator.Info Info, int BacklogCount)
+		{
+			GenerateData(Info);
+
+			Result[] results = new Analyzer.Result[Analyzers.Length];
+
+			for (int i = 0; i < Analyzers.Length; ++i)
+				results[i] = Analyzers[i](Info);
+
+			double buyWorthiness = 0;
+			float buySignalPower = 0;
+			FindSignal(results, BacklogCount, 1, out buyWorthiness, out buySignalPower);
+
+			double sellWorthiness = 0;
+			float sellSignalPower = 0;
+			FindSignal(results, BacklogCount, -1, out sellWorthiness, out sellSignalPower);
+
+			Debug.Assert(buySignalPower == 0 || buySignalPower != sellSignalPower);
+
+			double worthiness = 0;
+
+			if (buySignalPower > sellSignalPower)
+				worthiness = buyWorthiness;
+			else
+				worthiness = sellWorthiness;
+
+			return new AnalyzeInfo() { Worthiness = worthiness };
+		}
+
+		private static void GenerateData(Indicator.Info Info)
+		{
+			DataTable historyData = Info.HistoryData;
+
+			for (int i = 0; i < Indicators.Length; ++i)
+			{
+				DataTable indicatorData = Indicators[i](Info);
+				if (indicatorData == null)
+					continue;
+
+				int startIndex = historyData.Rows.Count - indicatorData.Rows.Count;
+
+				for (int j = 0; j < indicatorData.Columns.Count; ++j)
+				{
+					DataColumn column = indicatorData.Columns[j];
+
+					historyData.Columns.Add(column.ColumnName, column.DataType);
+
+					for (int l = 0; l < indicatorData.Rows.Count; ++l)
+						historyData.Rows[startIndex + l][column.ColumnName] = indicatorData.Rows[l][column.ColumnName];
+				}
+			}
+		}
+
+		private static void FindSignal(Result[] Results, int BacklogCount, int Action, out double Worthiness, out float SignalPower)
+		{
+			Worthiness = 0;
+			SignalPower = 0;
+
+			int confirmedSignalCount = 0;
+
+			int lastSingalIndex = BacklogCount - 1;
+
+			int[] signalIndex = new int[Results.Length];
+			for (int i = 0; i < signalIndex.Length; ++i)
+				signalIndex[i] = -1;
+
+			for (int i = 0; i < Results.Length; ++i)
+			{
+				if (Results[i] == null || signalIndex[i] != -1)
+					continue;
+
+				Signal signal = Results[i].Signals[lastSingalIndex];
+
+				int action = Math.Sign(signal.Worthiness);
+
+				if (action == 0)
+					continue;
+
+				signalIndex[i] = i;
+
+				if (action != Action)
+					continue;
+
+				Worthiness += signal.Worthiness;
+				SignalPower += 1;
+
+				for (int j = 0; j < Results.Length; ++j)
+				{
+					if (i == j)
+						continue;
+
+					if (Results[j] == null || signalIndex[j] != -1)
+						continue;
+
+					for (int l = lastSingalIndex; l > -1; --l)
+					{
+						Signal refSignal = Results[j].Signals[l];
+
+						int refAction = Math.Sign(refSignal.Worthiness);
+
+						if (refAction == 0)
+							continue;
+
+						signalIndex[j] = j;
+
+						if (refAction != Action)
+							break;
+
+						Worthiness += refSignal.Worthiness;
+						++confirmedSignalCount;
+						SignalPower += (l + 1) / (float)BacklogCount;
+
+						break;
+					}
+				}
+			}
+
+			if (confirmedSignalCount < ConfigManager.Config.DataAnalyzer.SignalConfirmationCount)
+			{
+				SignalPower = 0;
+				return;
+			}
+
+			Worthiness /= (confirmedSignalCount + 1);
+			SignalPower /= Results.Length;
 		}
 
 		private static bool CheckCrossover(double AveragePrevious, double AverageCurrent, double SignalPrevious, double SignalCurrent, out int Direction)
@@ -67,87 +189,6 @@ namespace Core
 				return false;
 
 			return true;
-		}
-
-		public static DataTable GenerateSimpleMovingAverageData(DataTable Data, string ColumnName, int BacklogCount, int CalculationCount)
-		{
-			if (BacklogCount < 1)
-			{
-				ConsoleHelper.WriteError("HistoryCount must be grater than 0, current value is {0}", BacklogCount);
-				return null;
-			}
-
-			int requiredCount = (BacklogCount + CalculationCount) - 1;
-
-			if (Data.Rows.Count < requiredCount)
-				return null;
-
-			int startIndex = Data.Rows.Count - requiredCount;
-
-			DataTable smaData = new DataTable();
-			//smaData.Columns.Add("date", typeof(DateTime));
-			smaData.Columns.Add("sma", typeof(double));
-
-			double tailSum = 0;
-			for (int i = startIndex; i < Data.Rows.Count; ++i)
-			{
-				DataRow row = Data.Rows[i];
-
-				tailSum += Convert.ToDouble(row[ColumnName]);
-
-				if (i + 1 >= startIndex + BacklogCount)
-				{
-					//smaData.Rows.Add(row["take_time"], tailSum / BacklogCount);
-					smaData.Rows.Add(tailSum / BacklogCount);
-
-					tailSum -= Convert.ToDouble(Data.Rows[i - (BacklogCount - 1)][ColumnName]);
-				}
-			}
-
-			return smaData;
-		}
-
-		public static DataTable GenerateExponentialMovingAverage(DataTable Data, string ColumnName, int BacklogCount, int CalculationCount)
-		{
-			if (BacklogCount < 1)
-			{
-				ConsoleHelper.WriteError("HistoryCount must be grater than 0, current value is {0}", BacklogCount);
-				return null;
-			}
-
-			int requiredCount = BacklogCount + CalculationCount;
-
-			if (Data.Rows.Count < requiredCount)
-				return null;
-
-			double k = 2 / (float)(BacklogCount + 1);
-
-			int startIndex = Data.Rows.Count - requiredCount;
-
-			double lastEMA = 0;
-			for (int i = 0; i < BacklogCount; ++i)
-				lastEMA += Convert.ToInt32(Data.Rows[startIndex + i][ColumnName]);
-			lastEMA /= BacklogCount;
-
-			startIndex = Data.Rows.Count - CalculationCount;
-
-			DataTable emaData = new DataTable();
-			//emaData.Columns.Add("date", typeof(DateTime));
-			emaData.Columns.Add("ema", typeof(double));
-
-			for (int i = startIndex; i < Data.Rows.Count; ++i)
-			{
-				DataRow row = Data.Rows[i];
-
-				double ema = (Convert.ToInt32(row[ColumnName]) * k) + (lastEMA * (1 - k));
-
-				//emaData.Rows.Add(row["take_time"], tailSum / BacklogCount);
-				emaData.Rows.Add(ema);
-
-				lastEMA = ema;
-			}
-
-			return emaData;
 		}
 	}
 }

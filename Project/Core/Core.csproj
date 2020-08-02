@@ -48,11 +48,12 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helper.cs" />
-    <Compile Include="Analyzer_AwesomeOscillator.cs" />
-    <Compile Include="Analyzer_MovingAverageConvergenceDivergence.cs" />
-    <Compile Include="Analyzer_SimpleMovingAverage.cs" />
+    <Compile Include="Indicator_MovingAverageConvergenceDivergence.cs" />
     <Compile Include="Analyzer_RelativeStrengthIndex.cs" />
+    <Compile Include="Indicator.cs" />
+    <Compile Include="Helper.cs" />
+    <Compile Include="Analyzer_MovingAverageConvergenceDivergence.cs" />
+    <Compile Include="Indicator_RelativeStrengthIndex.cs" />
     <Compile Include="ValidationReporter.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="ConfigManager.cs" />
