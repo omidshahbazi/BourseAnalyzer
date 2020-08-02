@@ -6,8 +6,8 @@ namespace Core
 {
 	public static partial class Analyzer
 	{
-		private static readonly Func<Indicator.Info, DataTable>[] Indicators = new Func<Indicator.Info, DataTable>[] { Indicator.MovingAverageConvergenceDivergence.Generate, Indicator.RelativeStrengthIndex.Generate };
-		private static readonly Func<Indicator.Info, Result>[] Analyzers = new Func<Indicator.Info, Result>[] { RelativeStrengthIndex.Analyze, MovingAverageConvergenceDivergence.Analyze };
+		private static readonly Func<Indicator.Info, DataTable>[] Indicators = new Func<Indicator.Info, DataTable>[] { Indicator.MACD.Generate, Indicator.RSI.Generate };
+		private static readonly Func<Indicator.Info, Result>[] Analyzers = new Func<Indicator.Info, Result>[] { MACD_RSI_EMA.Analyze };
 
 		public class Signal
 		{

@@ -6,7 +6,7 @@ namespace Core
 {
 	public static partial class Indicator
 	{
-		public static class MovingAverageConvergenceDivergence
+		public static class MACD
 		{
 			//https://commodity.com/technical-analysis/macd/
 			//https://fairmontequities.com/how-to-calculate-the-macd/
@@ -37,9 +37,6 @@ namespace Core
 
 			public static DataTable Generate(Info Info)
 			{
-				if (!ConfigManager.Config.DataAnalyzer.MovingAverageConvergenceDivergence.Enabled)
-					return null;
-
 				if (FastHistoryCount <= 0)
 				{
 					ConsoleHelper.WriteError("FastHistoryCount must be grater than 0, current value is {0}", FastHistoryCount);

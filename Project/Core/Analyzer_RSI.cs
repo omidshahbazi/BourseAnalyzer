@@ -7,19 +7,9 @@ namespace Core
 {
 	public static partial class Analyzer
 	{
-		public static class RelativeStrengthIndex
+		public static class RSI
 		{
 			//https://blog.quantinsti.com/rsi-indicator/
-
-			private static int HistoryCount
-			{
-				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.HistoryCount; }
-			}
-
-			private static int CalculationCount
-			{
-				get { return ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.CalculationCount; }
-			}
 
 			private static float LowRSI
 			{
@@ -68,10 +58,12 @@ namespace Core
 					ConsoleHelper.WriteError("HighRSI must be grater than MidRSI and smaller than MaxRSI, current value is {0}", HighRSI);
 					return null;
 				}
+				DataTable data = Info.HistoryData;
+
+				if (!data.Columns.Contains("rsi"))
+					return null;
 
 				Result result = new Result() { Signals = new Signal[ConfigManager.Config.DataAnalyzer.BacklogCount] };
-
-				DataTable data = Info.HistoryData;
 
 				for (int i = 0; i < result.Signals.Length; ++i)
 				{

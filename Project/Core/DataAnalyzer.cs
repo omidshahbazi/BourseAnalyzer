@@ -68,7 +68,7 @@ namespace Core
 
 				int id = Convert.ToInt32(row["id"]);
 				string symbol = row["symbol"].ToString();
-				id = 855;
+
 				DataTable historyTable = Data.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close, ((high-low)/2) median FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=DATE(@current_date) ORDER BY take_time",
 					"stock_id", id,
 					"current_date", CurrentDateTime);
@@ -87,6 +87,17 @@ namespace Core
 
 				if (result.Worthiness != 0)
 				{
+					//DataTable historyTable1 = Data.QueryDataTable("SELECT take_time, count, volume, value, open, first, high, low, last, close, ((high-low)/2) median FROM snapshots WHERE stock_id=@stock_id AND DATE(take_time)<=TIMESTAMPADD(DAY, 3, DATE(@current_date)) ORDER BY take_time",
+					//	"stock_id", id,
+					//	"current_date", CurrentDateTime);
+
+					//if (historyTable1.Rows.Count != 0)
+					//{
+					//	if (Math.Sign(Convert.ToInt32(historyTable1.Rows[historyTable1.Rows.Count - 1]["close"]) - Convert.ToInt32(historyTable.Rows[historyTable.Rows.Count - 1]["close"])) != Math.Sign(result.Worthiness))
+					//	{
+					//		Console.WriteLine(id);
+					//	}
+					//}
 					query.Append("INSERT INTO analyzes(stock_id, analyze_time, action, worthiness) VALUES(");
 					query.Append(id);
 					query.Append(",'");

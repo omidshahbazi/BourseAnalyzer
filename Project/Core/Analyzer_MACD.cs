@@ -6,7 +6,7 @@ namespace Core
 {
 	public static partial class Analyzer
 	{
-		public static class MovingAverageConvergenceDivergence
+		public static class MACD
 		{
 			private static float IgnoreThreshold
 			{
@@ -35,16 +35,18 @@ namespace Core
 					return null;
 				}
 
-				Result result = new Result() { Signals = new Signal[ConfigManager.Config.DataAnalyzer.BacklogCount] };
-
 				DataTable data = Info.HistoryData;
+
+				if (!data.Columns.Contains("macd"))
+					return null;
+
+				Result result = new Result() { Signals = new Signal[ConfigManager.Config.DataAnalyzer.BacklogCount] };
 
 				for (int i = 0; i < result.Signals.Length; ++i)
 				{
-					int action = 0;
-					double worthiness = 0;
-
 					int index = data.Rows.Count - 1 - i - PostPeriodCount;
+
+					double worthiness = 0;
 
 					if (index > 0)
 					{
@@ -58,6 +60,7 @@ namespace Core
 						double threshold = (close == 0 ? 0 : Math.Abs(currMACD - currSignal) / close);
 						if (PostPeriodCount == 0 || threshold >= IgnoreThreshold)
 						{
+							int action = 0;
 							Analyzer.CheckCrossover(prevMACD, currMACD, prevSignal, currSignal, out action);
 
 							if (action != 0)

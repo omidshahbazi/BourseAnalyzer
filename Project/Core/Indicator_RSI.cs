@@ -6,7 +6,7 @@ namespace Core
 {
 	public static partial class Indicator
 	{
-		public static class RelativeStrengthIndex
+		public static class RSI
 		{
 			//https://blog.quantinsti.com/rsi-indicator/
 
@@ -27,9 +27,6 @@ namespace Core
 
 			public static DataTable Generate(Info Info)
 			{
-				if (!ConfigManager.Config.DataAnalyzer.RelativeStrengthIndex.Enabled)
-					return null;
-
 				DataTable data = Info.HistoryData;
 
 				if (HistoryCount <= 0)
