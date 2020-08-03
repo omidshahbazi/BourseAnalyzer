@@ -8,7 +8,7 @@ namespace Core
 {
 	public class Manager
 	{
-		private static readonly Worker[] workers = new Worker[] { new DataUpdater(), new AnalyzeValidator(), new DataAnalyzer(), new AnalyzeReporter(), new ValidationReporter() };
+		private static readonly Worker[] workers = new Worker[] { new DataUpdater(), new AnalyzeValidator(), new DataAnalyzer(), new AnalyzeReporter(), new ValidationReporter(), new BackupMaker() };
 
 		public void Run()
 		{
@@ -70,7 +70,7 @@ namespace Core
 
 					string workerName = worker.GetType().Name;
 
-					DataTable workerSchedulesData = Data.QueryDataTable("SELECT id, name, schedule_time FROM worker_schedules WHERE DATE(schedule_time)=DATE(@date)", "date", nextScheduleTime);
+					DataTable workerSchedulesData = Data.QueryDataTable("SELECT id, name, schedule_time FROM worker_schedules WHERE name=@name AND DATE(schedule_time)=DATE(@date)", "name", workerName, "date", nextScheduleTime);
 					if (workerSchedulesData.DefaultView.Count == 0)
 					{
 						query.Append("INSERT INTO worker_schedules(name, schedule_time, done) VALUES(");

@@ -100,6 +100,15 @@ namespace Core
 		public string Path = "Output/ValidateReport/";
 	}
 
+	public class BackupMakerConfig
+	{
+		public bool Enabled = true;
+		public float WorkHour = 11.5F;
+
+		public string MySQLDumpPath = "C:/Program Files/MySQL/MySQL Server 8.0/bin";
+		public string OutputPath = "Backup/";
+	}
+
 	public class Config
 	{
 		public Database.CreateInfo DatabaseConnection;
@@ -109,8 +118,9 @@ namespace Core
 		public DataUpdaterConfig DataUpdater = new DataUpdaterConfig();
 		public AnalyzeValidatorConfig AnalyzeValidator = new AnalyzeValidatorConfig();
 		public DataAnalyzerConfig DataAnalyzer = new DataAnalyzerConfig();
-		public ValidationReporterConfig ValidationReporter = new ValidationReporterConfig();
 		public AnalyzeReporterConfig AnalyzeReporter = new AnalyzeReporterConfig();
+		public ValidationReporterConfig ValidationReporter = new ValidationReporterConfig();
+		public BackupMakerConfig BackupMaker = new BackupMakerConfig();
 	}
 
 	public static class ConfigManager

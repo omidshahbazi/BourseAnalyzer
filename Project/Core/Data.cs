@@ -28,7 +28,8 @@ namespace Core
 			MIGRATION_BOURSE_2020072601,
 			MIGRATION_BOURSE_2020072701,
 			MIGRATION_BOURSE_2020080101,
-			MIGRATION_BOURSE_2020080201 };
+			MIGRATION_BOURSE_2020080201,
+			MIGRATION_BOURSE_2020080301 };
 
 		private static readonly string[] MIGRATIONS_NAME = new string[] {
 			"Migration_Bourse_2020071101",
@@ -50,7 +51,8 @@ namespace Core
 			"Migration_Bourse_2020072601",
 			"Migration_Bourse_2020072701",
 			"Migration_Bourse_2020080101",
-			"Migration_Bourse_2020080201" };
+			"Migration_Bourse_2020080201",
+			"Migration_Bourse_2020080301" };
 
 		private const string MIGRATION_BOURSE_2020071101 = @"
 			CREATE TABLE `stocks` (
@@ -238,6 +240,13 @@ namespace Core
 		private const string MIGRATION_BOURSE_2020080201 = @"
 			CREATE VIEW `trades_view` AS
 			SELECT s.id, s.symbol, s.name stock_name, ts.name trader_name, t.price, t.count, (t.price*t.count) total_price, t.action_time FROM trades t INNER JOIN traders ts ON t.trader_id=ts.id INNER JOIN stocks s on t.stock_id=s.id;";
+
+		private const string MIGRATION_BOURSE_2020080301 = @"
+			CREATE OR REPLACE ALGORITHM = UNDEFINED 
+				DEFINER = `root`@`localhost` 
+				SQL SECURITY DEFINER
+			VIEW `trades_view` AS
+				SELECT s.id, s.symbol, s.name stock_name, ts.name trader_name, AVG(t.price) average_price, SUM(t.count*t.action) count, SUM(t.price*t.count*t.action) total_price, t.action_time FROM trades t INNER JOIN traders ts ON t.trader_id=ts.id INNER JOIN stocks s on t.stock_id=s.id GROUP BY t.trader_id, t.stock_id;";
 
 		public static Database Database
 		{

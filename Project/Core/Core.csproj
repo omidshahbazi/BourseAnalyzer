@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Analyzer_MACD_RSI_EMA.cs" />
+    <Compile Include="BackupMaker.cs" />
     <Compile Include="Indicator_MACD.cs" />
     <Compile Include="Analyzer_RSI.cs" />
     <Compile Include="Indicator.cs" />

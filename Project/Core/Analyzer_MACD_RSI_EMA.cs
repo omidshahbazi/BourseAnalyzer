@@ -10,6 +10,7 @@ namespace Core
 		{
 			//https://finmaxbo.com/en/strategy/1160-macd-rsi-alligator.html
 			//https://asanbourse.ir/Blog/?p=390
+			//https://www.olymptradewiki.com/sma-rsi-and-macd-successful-options-trading-strategy/
 
 			private static float BuyMaxRSI
 			{
