@@ -68,8 +68,8 @@ namespace BourseAnalyzerService
 		{
 			GetTradeDataRes res = new GetTradeDataRes();
 
-			res.AllTrades = GenerateTradeData(database.QueryDataTable("SELECT t.id, s.symbol, t.price, t.count, t.action, UNIX_TIMESTAMP(t.action_time) action_time FROM trades t INNER JOIN stocks s ON t.stock_id=s.id WHERE trader_id=@trader_id ORDER BY t.action_time", "trader_id", Req.TraderID));
-			res.TotalTrades = GenerateTradeData(database.QueryDataTable("SELECT t.id, s.symbol, SUM(t.price * t.action) price, SUM(t.count * t.action) count, SUM(t.action) action, UNIX_TIMESTAMP(MAX(t.action_time)) action_time FROM trades t INNER JOIN stocks s ON t.stock_id=s.id WHERE trader_id=@trader_id GROUP BY t.stock_id ORDER BY t.action_time", "trader_id", Req.TraderID));
+			res.AllTrades = GenerateTradeData(database.QueryDataTable("SELECT t.id, s.symbol, t.price, t.count, t.price*t.count total_price, t.action, UNIX_TIMESTAMP(t.action_time) action_time FROM trades t INNER JOIN stocks s ON t.stock_id=s.id WHERE trader_id=@trader_id ORDER BY t.action_time", "trader_id", Req.TraderID));
+			res.TotalTrades = GenerateTradeData(database.QueryDataTable("SELECT t.id, s.symbol, AVG(t.price) price, SUM(t.count*t.action) count, SUM(t.price*t.count*t.action) total_price, SUM(t.action) action, UNIX_TIMESTAMP(MAX(t.action_time)) action_time FROM trades t INNER JOIN stocks s ON t.stock_id=s.id WHERE trader_id=@trader_id GROUP BY t.stock_id ORDER BY t.action_time", "trader_id", Req.TraderID));
 
 			return res;
 		}
@@ -108,6 +108,7 @@ namespace BourseAnalyzerService
 					Symbol = row["symbol"].ToString(),
 					Price = Convert.ToInt32(row["price"]),
 					Count = Convert.ToInt32(row["count"]),
+					TotalPrice = Convert.ToInt32(row["total_price"]),
 					Action = Convert.ToInt32(row["action"]),
 					Time = Convert.ToDouble(row["action_time"])
 				};

@@ -12,6 +12,7 @@
 		public string Symbol;
 		public int Price;
 		public int Count;
+		public int TotalPrice;
 		public int Action;
 		public double Time;
 	}

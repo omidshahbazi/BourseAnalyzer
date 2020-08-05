@@ -142,7 +142,7 @@ namespace BourseAnalyzerClient
 					tradeInfo.Symbol,
 					tradeInfo.Price,
 					tradeInfo.Count,
-					tradeInfo.Price * tradeInfo.Count,
+					tradeInfo.TotalPrice,
 					(tradeInfo.Action > 0 ? "Buy" : "Sell"),
 					startTime.AddSeconds(tradeInfo.Time)
 					);
