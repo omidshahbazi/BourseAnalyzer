@@ -1,0 +1,26 @@
+{
+	"ConfigStructType": "Backend.Base.ConfigSystem.Server, Backend.Base.NetFramework",
+	"Sockets": [
+		{
+			"Host": "::0",
+			"Ports": [
+				5000
+			],
+			"Protocol": "TCP",
+			"ReceiveBufferSize": 10983040,
+			"SendBufferSize": 10983040
+		}
+	],
+	"Modules": {
+		"LibrariesPath": "Libraries/NetFramework/",
+		"Files": [
+		]
+	},
+	"Loggers": [
+		{
+			"Type": "Console",
+			"MinimumLevel": "Info",
+			"Path": null
+		}
+	]
+}
