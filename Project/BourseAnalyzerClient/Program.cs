@@ -14,7 +14,6 @@ namespace BourseAnalyzerClient
 		}
 
 		public static States State = States.Connecting;
-		public static int TraderID;
 
 		[STAThread]
 		private static void Main()

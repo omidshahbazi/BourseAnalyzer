@@ -43,6 +43,7 @@
       <HintPath>..\Backend\Client\Backend.Common.NetFramework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
@@ -53,6 +54,7 @@
     <Compile Include="ClientForm.Designer.cs">
       <DependentUpon>ClientForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Data.cs" />
     <Compile Include="Networking.cs" />
     <Compile Include="ConfigManager.cs" />
     <Compile Include="LoginForm.cs">

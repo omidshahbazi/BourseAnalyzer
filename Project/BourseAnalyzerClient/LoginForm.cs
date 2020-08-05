@@ -17,6 +17,8 @@ namespace BourseAnalyzerClient
 			serviceTimer.Interval = 100;
 			serviceTimer.Tick += ServiceTimer_Tick;
 			serviceTimer.Start();
+
+			LoginButton_Click(null, null);
 		}
 
 		private void ServiceTimer_Tick(object sender, System.EventArgs e)
@@ -33,7 +35,7 @@ namespace BourseAnalyzerClient
 			{
 				if (res.Result)
 				{
-					Program.TraderID = res.TraderID;
+					Data.TraderID = res.TraderID;
 					Program.State = Program.States.Client;
 
 					lock (lockObject)

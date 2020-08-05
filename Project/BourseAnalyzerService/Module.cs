@@ -20,6 +20,7 @@ namespace BourseAnalyzerService
 
 			Context.RequestManager.RegisterHandler<LoginReq, LoginRes>(LoginHandler);
 			Context.RequestManager.RegisterHandler<GetBasicDataReq, GetBasicDataRes>(GetBasicDataHandler);
+			Context.RequestManager.RegisterHandler<GetTradeDataReq, GetTradeDataRes>(GetTradeDataHandler);
 		}
 
 		public void Service()
@@ -46,19 +47,51 @@ namespace BourseAnalyzerService
 
 		private GetBasicDataRes GetBasicDataHandler(IClient Client, GetBasicDataReq Req)
 		{
-			DataTable tradersData = database.QueryDataTable("SELECT id, symbol FROM stocks");
+			DataTable stocksData = database.QueryDataTable("SELECT id, symbol FROM stocks");
 
 			GetBasicDataRes res = new GetBasicDataRes();
 
-			res.StocksSymbol = new string[tradersData.Rows.Count];
-			for (int i = 0; i < tradersData.Rows.Count; ++i)
+			res.Stocks = new StockInfo[stocksData.Rows.Count];
+			for (int i = 0; i < stocksData.Rows.Count; ++i)
 			{
-				DataRow row = tradersData.Rows[i];
+				DataRow row = stocksData.Rows[i];
 
-				res.StocksSymbol[i] = row["symbol"].ToString();
+				res.Stocks[i] = new StockInfo() { ID = Convert.ToInt32(row["id"]), Symbol = row["symbol"].ToString() };
 			}
 
 			return res;
+		}
+
+		private GetTradeDataRes GetTradeDataHandler(IClient Client, GetTradeDataReq Req)
+		{
+			GetTradeDataRes res = new GetTradeDataRes();
+
+			res.AllTrades = GenerateTradeData(database.QueryDataTable("SELECT t.id, s.symbol, t.price, t.count, t.action, UNIX_TIMESTAMP(t.action_time) action_time FROM trades t INNER JOIN stocks s ON t.stock_id=s.id WHERE trader_id=@trader_id ORDER BY t.action_time", "trader_id", Req.TraderID));
+			res.TotalTrades = GenerateTradeData(database.QueryDataTable("SELECT t.id, s.symbol, SUM(t.price * t.action) price, SUM(t.count * t.action) count, SUM(t.action) action, UNIX_TIMESTAMP(MAX(t.action_time)) action_time FROM trades t INNER JOIN stocks s ON t.stock_id=s.id WHERE trader_id=@trader_id GROUP BY t.stock_id ORDER BY t.action_time", "trader_id", Req.TraderID));
+
+			return res;
+		}
+
+		private TradeInfo[] GenerateTradeData(DataTable Data)
+		{
+			TradeInfo[] info = new TradeInfo[Data.Rows.Count];
+
+			for (int i = 0; i < Data.Rows.Count; ++i)
+			{
+				DataRow row = Data.Rows[i];
+
+				info[i] = new TradeInfo()
+				{
+					ID = Convert.ToInt32(row["id"]),
+					Symbol = row["symbol"].ToString(),
+					Price = Convert.ToInt32(row["price"]),
+					Count = Convert.ToInt32(row["count"]),
+					Action = Convert.ToInt32(row["action"]),
+					Time = Convert.ToDouble(row["action_time"])
+				};
+			}
+
+			return info;
 		}
 	}
 }

@@ -1,5 +1,21 @@
 ﻿namespace BourseAnalyzerServiceCommon
 {
+	public class StockInfo
+	{
+		public int ID;
+		public string Symbol;
+	}
+
+	public class TradeInfo
+	{
+		public int ID;
+		public string Symbol;
+		public int Price;
+		public int Count;
+		public int Action;
+		public double Time;
+	}
+
 	public class LoginReq
 	{
 		public string Username;
@@ -20,6 +36,17 @@
 
 	public class GetBasicDataRes
 	{
-		public string[] StocksSymbol;
+		public StockInfo[] Stocks;
+	}
+
+	public class GetTradeDataReq
+	{
+		public int TraderID;
+	}
+
+	public class GetTradeDataRes
+	{
+		public TradeInfo[] AllTrades;
+		public TradeInfo[] TotalTrades;
 	}
 }
