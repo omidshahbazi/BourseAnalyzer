@@ -5,16 +5,11 @@ using System.Windows.Forms;
 
 namespace BourseAnalyzerClient
 {
-	partial class ClientForm : Form
+	partial class ClientForm : BaseForm
 	{
 		public ClientForm()
 		{
 			InitializeComponent();
-
-			Timer serviceTimer = new Timer();
-			serviceTimer.Interval = 100;
-			serviceTimer.Tick += ServiceTimer_Tick;
-			serviceTimer.Start();
 
 			TradesDataGridView.AutoGenerateColumns = false;
 			ActionDateTimePicker.Value = DateTime.Now;
@@ -45,11 +40,6 @@ namespace BourseAnalyzerClient
 		{
 			Program.State = Program.States.Connecting;
 			Close();
-		}
-
-		private void ServiceTimer_Tick(object sender, EventArgs e)
-		{
-			Networking.Service();
 		}
 
 		private void TradesDataGridView_SelectionChanged(object sender, EventArgs e)

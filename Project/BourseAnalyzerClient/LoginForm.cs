@@ -3,25 +3,13 @@ using System.Windows.Forms;
 
 namespace BourseAnalyzerClient
 {
-	public partial class LoginForm : Form
+	public partial class LoginForm : BaseForm
 	{
-		private object lockObject = new object();
-
 		public LoginForm()
 		{
 			InitializeComponent();
 
 			UsernameTextBox.Text = ConfigManager.Config.LastUsername;
-
-			Timer serviceTimer = new Timer();
-			serviceTimer.Interval = 100;
-			serviceTimer.Tick += ServiceTimer_Tick;
-			serviceTimer.Start();
-		}
-
-		private void ServiceTimer_Tick(object sender, System.EventArgs e)
-		{
-			Networking.Service();
 		}
 
 		private void LoginButton_Click(object sender, System.EventArgs e)
@@ -36,10 +24,7 @@ namespace BourseAnalyzerClient
 					Data.TraderID = res.TraderID;
 					Program.State = Program.States.Client;
 
-					lock (lockObject)
-					{
 						Close();
-					}
 				}
 				else
 					MessageBox.Show(res.Message, "Login failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
