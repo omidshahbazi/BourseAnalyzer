@@ -49,4 +49,27 @@
 		public TradeInfo[] AllTrades;
 		public TradeInfo[] TotalTrades;
 	}
+
+	public class DeleteTradeReq
+	{
+		public int TradeID;
+	}
+
+	public class DeleteTradeRes
+	{
+	}
+
+	public class AddTradeReq
+	{
+		public int TraderID;
+		public int StockID;
+		public int Price;
+		public int Count;
+		public int Action;
+		public double Time;
+	}
+
+	public class AddTradeRes
+	{
+	}
 }

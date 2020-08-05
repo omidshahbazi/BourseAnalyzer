@@ -17,8 +17,6 @@ namespace BourseAnalyzerClient
 			serviceTimer.Interval = 100;
 			serviceTimer.Tick += ServiceTimer_Tick;
 			serviceTimer.Start();
-
-			LoginButton_Click(null, null);
 		}
 
 		private void ServiceTimer_Tick(object sender, System.EventArgs e)
@@ -44,7 +42,7 @@ namespace BourseAnalyzerClient
 					}
 				}
 				else
-					MessageBox.Show(res.Message);
+					MessageBox.Show(res.Message, "Login failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			});
 		}
 	}

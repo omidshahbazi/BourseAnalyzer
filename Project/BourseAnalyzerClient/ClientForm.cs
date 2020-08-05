@@ -35,6 +35,16 @@ namespace BourseAnalyzerClient
 			});
 
 			UpdateTradeData();
+
+			Networking.Connection.OnDisconnected += Connection_OnDisconnected;
+
+			Program.State = Program.States.Close;
+		}
+
+		private void Connection_OnDisconnected(Backend.Common.NetworkSystem.Connection Connection)
+		{
+			Program.State = Program.States.Connecting;
+			Close();
 		}
 
 		private void ServiceTimer_Tick(object sender, EventArgs e)
@@ -65,12 +75,40 @@ namespace BourseAnalyzerClient
 			StocksComboBox.ValueMember = "id";
 			StocksComboBox.DisplayMember = "symbol";
 			StocksComboBox.BindingContext = BindingContext;
+
+			if (StocksComboBox.Items.Count != 0)
+				StocksComboBox.SelectedIndex = 0;
 		}
 
 		private void TotalCheckBox_CheckedChanged(object sender, EventArgs e)
 		{
 			UpdateTradeDataGridView();
+		}
 
+		private void DeleteButton_Click(object sender, EventArgs e)
+		{
+			if (MessageBox.Show("Whould you like to delete the entry?", "Delete entry", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+				return;
+
+			DataGridViewRow dgvr = TradesDataGridView.SelectedRows[0];
+			DataRowView row = (DataRowView)dgvr.DataBoundItem;
+
+			Networking.Connection.Send<DeleteTradeReq, DeleteTradeRes>(new DeleteTradeReq() { TradeID = Convert.ToInt32(row["id"]) }, (res) =>
+			{
+				if (res != null)
+					UpdateTradeData();
+			});
+		}
+
+		private void SaveButton_Click(object sender, EventArgs e)
+		{
+			DataRowView row = (DataRowView)StocksComboBox.SelectedItem;
+
+			Networking.Connection.Send<AddTradeReq, AddTradeRes>(new AddTradeReq() { TraderID = Data.TraderID, StockID = Convert.ToInt32(row["id"]), Price = (int)PriceNumericUpDown.Value, Count = (int)CountNumericUpDown.Value, Action = (BuyRadioButton.Checked ? 1 : -1), Time = (ActionDateTimePicker.Value - new DateTime(1970, 1, 1)).TotalSeconds }, (res) =>
+			{
+				if (res != null)
+					UpdateTradeData();
+			});
 		}
 
 		private void UpdateTradeData()
@@ -86,9 +124,9 @@ namespace BourseAnalyzerClient
 
 		private void UpdateTradeDataGridView()
 		{
-			DeleteButton.Enabled = !TotalCheckBox.Checked;
-
 			TradesDataGridView.DataSource = (TotalCheckBox.Checked ? Data.TotalTrades : Data.AllTrades);
+
+			DeleteButton.Enabled = (TradesDataGridView.RowCount != 0 && !TotalCheckBox.Checked);
 		}
 
 		private DataTable GenerateTradeData(TradeInfo[] Trades)

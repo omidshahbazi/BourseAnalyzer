@@ -21,6 +21,8 @@ namespace BourseAnalyzerService
 			Context.RequestManager.RegisterHandler<LoginReq, LoginRes>(LoginHandler);
 			Context.RequestManager.RegisterHandler<GetBasicDataReq, GetBasicDataRes>(GetBasicDataHandler);
 			Context.RequestManager.RegisterHandler<GetTradeDataReq, GetTradeDataRes>(GetTradeDataHandler);
+			Context.RequestManager.RegisterHandler<DeleteTradeReq, DeleteTradeRes>(DeleteTradeHandler);
+			Context.RequestManager.RegisterHandler<AddTradeReq, AddTradeRes>(AddTradeHandler);
 		}
 
 		public void Service()
@@ -70,6 +72,26 @@ namespace BourseAnalyzerService
 			res.TotalTrades = GenerateTradeData(database.QueryDataTable("SELECT t.id, s.symbol, SUM(t.price * t.action) price, SUM(t.count * t.action) count, SUM(t.action) action, UNIX_TIMESTAMP(MAX(t.action_time)) action_time FROM trades t INNER JOIN stocks s ON t.stock_id=s.id WHERE trader_id=@trader_id GROUP BY t.stock_id ORDER BY t.action_time", "trader_id", Req.TraderID));
 
 			return res;
+		}
+
+		private DeleteTradeRes DeleteTradeHandler(IClient Client, DeleteTradeReq Req)
+		{
+			database.Execute("DELETE FROM trades WHERE id=@id", "id", Req.TradeID);
+
+			return new DeleteTradeRes();
+		}
+
+		private AddTradeRes AddTradeHandler(IClient Client, AddTradeReq Req)
+		{
+			database.Execute("Insert INTO trades(trader_id, stock_id, price, count, action, action_time) VALUES(@trader_id, @stock_id, @price, @count, @action, FROM_UNIXTIME(@action_time))",
+				"trader_id", Req.TraderID,
+				"stock_id", Req.StockID,
+				"price", Req.Price,
+				"count", Req.Count,
+				"action", Req.Action,
+				"action_time", Req.Time); 
+
+			return new AddTradeRes();
 		}
 
 		private TradeInfo[] GenerateTradeData(DataTable Data)

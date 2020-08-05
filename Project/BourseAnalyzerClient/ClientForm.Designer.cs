@@ -29,7 +29,7 @@
 		private void InitializeComponent()
 		{
 			this.StocksComboBox = new System.Windows.Forms.ComboBox();
-			this.PriceNumbericUpDown = new System.Windows.Forms.NumericUpDown();
+			this.PriceNumericUpDown = new System.Windows.Forms.NumericUpDown();
 			this.label2 = new System.Windows.Forms.Label();
 			this.label3 = new System.Windows.Forms.Label();
 			this.CountNumericUpDown = new System.Windows.Forms.NumericUpDown();
@@ -50,7 +50,7 @@
 			this.TotalCheckBox = new System.Windows.Forms.CheckBox();
 			this.DeleteButton = new System.Windows.Forms.Button();
 			this.SaveButton = new System.Windows.Forms.Button();
-			((System.ComponentModel.ISupportInitialize)(this.PriceNumbericUpDown)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.PriceNumericUpDown)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.CountNumericUpDown)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.TradesDataGridView)).BeginInit();
 			this.SuspendLayout();
@@ -66,19 +66,24 @@
 			this.StocksComboBox.Sorted = true;
 			this.StocksComboBox.TabIndex = 0;
 			// 
-			// PriceNumbericUpDown
+			// PriceNumericUpDown
 			// 
-			this.PriceNumbericUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.PriceNumbericUpDown.Location = new System.Drawing.Point(705, 70);
-			this.PriceNumbericUpDown.Minimum = new decimal(new int[] {
+			this.PriceNumericUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.PriceNumericUpDown.Location = new System.Drawing.Point(705, 70);
+			this.PriceNumericUpDown.Maximum = new decimal(new int[] {
+            1410065408,
+            2,
+            0,
+            0});
+			this.PriceNumericUpDown.Minimum = new decimal(new int[] {
             10,
             0,
             0,
             0});
-			this.PriceNumbericUpDown.Name = "PriceNumbericUpDown";
-			this.PriceNumbericUpDown.Size = new System.Drawing.Size(200, 22);
-			this.PriceNumbericUpDown.TabIndex = 2;
-			this.PriceNumbericUpDown.Value = new decimal(new int[] {
+			this.PriceNumericUpDown.Name = "PriceNumericUpDown";
+			this.PriceNumericUpDown.Size = new System.Drawing.Size(200, 22);
+			this.PriceNumericUpDown.TabIndex = 2;
+			this.PriceNumericUpDown.Value = new decimal(new int[] {
             10,
             0,
             0,
@@ -108,6 +113,11 @@
 			// 
 			this.CountNumericUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.CountNumericUpDown.Location = new System.Drawing.Point(705, 98);
+			this.CountNumericUpDown.Maximum = new decimal(new int[] {
+            1410065408,
+            2,
+            0,
+            0});
 			this.CountNumericUpDown.Minimum = new decimal(new int[] {
             1,
             0,
@@ -221,6 +231,7 @@
 			// 
 			// StockFilterTextBox
 			// 
+			this.StockFilterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.StockFilterTextBox.Location = new System.Drawing.Point(705, 13);
 			this.StockFilterTextBox.Name = "StockFilterTextBox";
 			this.StockFilterTextBox.Size = new System.Drawing.Size(200, 22);
@@ -289,22 +300,25 @@
 			// DeleteButton
 			// 
 			this.DeleteButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.DeleteButton.Enabled = false;
 			this.DeleteButton.Location = new System.Drawing.Point(12, 569);
 			this.DeleteButton.Name = "DeleteButton";
 			this.DeleteButton.Size = new System.Drawing.Size(75, 23);
 			this.DeleteButton.TabIndex = 15;
 			this.DeleteButton.Text = "Delete";
 			this.DeleteButton.UseVisualStyleBackColor = true;
+			this.DeleteButton.Click += new System.EventHandler(this.DeleteButton_Click);
 			// 
 			// SaveButton
 			// 
-			this.SaveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.SaveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.SaveButton.Location = new System.Drawing.Point(830, 179);
 			this.SaveButton.Name = "SaveButton";
 			this.SaveButton.Size = new System.Drawing.Size(75, 23);
 			this.SaveButton.TabIndex = 16;
 			this.SaveButton.Text = "Save";
 			this.SaveButton.UseVisualStyleBackColor = true;
+			this.SaveButton.Click += new System.EventHandler(this.SaveButton_Click);
 			// 
 			// ClientForm
 			// 
@@ -325,13 +339,13 @@
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.CountNumericUpDown);
 			this.Controls.Add(this.label2);
-			this.Controls.Add(this.PriceNumbericUpDown);
+			this.Controls.Add(this.PriceNumericUpDown);
 			this.Controls.Add(this.StocksComboBox);
 			this.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.Name = "ClientForm";
 			this.ShowIcon = false;
 			this.Text = "Client";
-			((System.ComponentModel.ISupportInitialize)(this.PriceNumbericUpDown)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.PriceNumericUpDown)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.CountNumericUpDown)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.TradesDataGridView)).EndInit();
 			this.ResumeLayout(false);
@@ -342,7 +356,7 @@
 		#endregion
 
 		private System.Windows.Forms.ComboBox StocksComboBox;
-		private System.Windows.Forms.NumericUpDown PriceNumbericUpDown;
+		private System.Windows.Forms.NumericUpDown PriceNumericUpDown;
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.NumericUpDown CountNumericUpDown;

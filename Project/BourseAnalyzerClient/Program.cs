@@ -24,22 +24,36 @@ namespace BourseAnalyzerClient
 			Networking.Connection.OnConnected += Connection_OnConnected;
 			Networking.Connection.OnConnectionFailed += Connection_OnConnectionFailed;
 
-			while (State == States.Connecting)
-				Networking.Service();
+			Networking.Connect();
 
-			if (State == States.Login)
+			while (true)
 			{
-				LoginForm loginForm = new LoginForm();
-				loginForm.ShowDialog();
+				while (State == States.Connecting)
+					Networking.Service();
 
-				if (State != States.Client)
-					State = States.Close;
-			}
+				if (State == States.Login)
+				{
+					LoginForm loginForm = new LoginForm();
+					loginForm.ShowDialog();
 
-			if (State == States.Client)
-			{
-				ClientForm clientForm = new ClientForm();
-				clientForm.ShowDialog();
+					if (State != States.Client)
+						State = States.Close;
+
+					continue;
+				}
+
+				if (State == States.Client)
+				{
+					ClientForm clientForm = new ClientForm();
+					clientForm.ShowDialog();
+
+					if (State != States.Close)
+						Networking.Connect();
+
+					continue;
+				}
+
+				break;
 			}
 		}
 
