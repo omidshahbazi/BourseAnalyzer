@@ -144,7 +144,7 @@ namespace BourseAnalyzerClient
 					tradeInfo.Count,
 					tradeInfo.TotalPrice,
 					(tradeInfo.Action > 0 ? "Buy" : "Sell"),
-					startTime.AddSeconds(tradeInfo.Time)
+					startTime.AddSeconds(tradeInfo.Time).Date
 					);
 			}
 

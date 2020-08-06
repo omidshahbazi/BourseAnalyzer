@@ -10,7 +10,7 @@ namespace BourseAnalyzerClient
 		public BaseForm()
 		{
 			serviceTimer = new Timer();
-			serviceTimer.Interval = 500;
+			serviceTimer.Interval = 100;
 			serviceTimer.Tick += ServiceTimer_Tick;
 			serviceTimer.Start();
 		}
