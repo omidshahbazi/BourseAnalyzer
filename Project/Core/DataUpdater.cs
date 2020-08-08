@@ -22,10 +22,10 @@ namespace Core
 
 			DataTable data = null;
 
-			if (CurrentDateTime.Date == DateTime.UtcNow.Date)
-				data = DataDownloader.DownloadLiveData();
-			else
-				data = DataDownloader.Download(CurrentDateTime);
+			//if (CurrentDateTime.Date == DateTime.UtcNow.Date)
+			//	data = DataDownloader.DownloadLiveData();
+			//else
+			data = DataDownloader.Download(CurrentDateTime);
 
 			if (data == null)
 				return false;
