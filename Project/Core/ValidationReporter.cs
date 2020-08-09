@@ -21,6 +21,10 @@ namespace Core
 
 		public override bool Do(DateTime CurrentDateTime)
 		{
+			DataTable analyzesValidationData = Data.QueryDataTable("SELECT COUNT(id) count FROM analyzes_validation WHERE DATE(validate_time)=DATE(@date)", "date", CurrentDateTime);
+			if (Convert.ToInt32(analyzesValidationData.Rows[0]["count"]) == 0)
+				return true;
+
 			DateTime startTime = CurrentDateTime.Date.AddDays(-1);
 			if (startTime.DayOfWeek == DayOfWeek.Friday)
 				startTime = startTime.AddDays(-2);

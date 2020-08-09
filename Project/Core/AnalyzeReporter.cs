@@ -23,11 +23,13 @@ namespace Core
 
 		public override bool Do(DateTime CurrentDateTime)
 		{
+			DataTable analyzesData = Data.QueryDataTable("SELECT s.id stock_id, s.name, s.symbol, DATE(analyze_time) analyze_time, a.action, a.worthiness FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id WHERE DATE(a.analyze_time)=DATE(@time) ORDER BY a.worthiness DESC", "time", CurrentDateTime);
+			if (analyzesData.Rows.Count == 0)
+				return true;
+
 			DataTable tradersData = Data.QueryDataTable("SELECT id, name, emails, send_full_sell_report FROM traders");
 			DataTable tradesData = Data.QueryDataTable("SELECT trader_id, stock_id, SUM(count * action) count FROM trades WHERE DATE(action_time)<=DATE(@time) GROUP BY trader_id, stock_id", "time", CurrentDateTime);
-			DataTable analyzesData = Data.QueryDataTable("SELECT s.id stock_id, s.name, s.symbol, DATE(analyze_time) analyze_time, a.action, a.worthiness FROM analyzes a INNER JOIN stocks s ON a.stock_id=s.id WHERE DATE(a.analyze_time)<=DATE(@time) ORDER BY a.worthiness DESC", "time", CurrentDateTime);
-			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, DATE(take_time) take_time, close FROM snapshots WHERE DATE(take_time)<=DATE(@time)", "time", CurrentDateTime);
-
+			
 			analyzesData.DefaultView.RowFilter = string.Format("action=1 AND analyze_time='{0}'", CurrentDateTime.Date.ToDatabaseDateTime());
 			DataTable buyAnalyzeData = analyzesData.DefaultView.ToTable();
 
