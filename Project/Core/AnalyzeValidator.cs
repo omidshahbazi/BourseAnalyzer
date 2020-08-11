@@ -6,6 +6,8 @@ namespace Core
 {
 	public class AnalyzeValidator : Worker
 	{
+		private const int BACKLOG_COUNT = 270;
+
 		public override bool Enabled
 		{
 			get { return ConfigManager.Config.AnalyzeValidator.Enabled; }
@@ -26,8 +28,8 @@ namespace Core
 
 			string dateTime = CurrentDateTime.ToDatabaseDateTime();
 
-			DataTable analyzesData = Data.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=DATE(@time)", "time", analyzeTime);
-			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, DATE(take_time) take_time, close FROM snapshots WHERE DATE(take_time)>=DATE(@analyze_time) ORDER BY take_time", "analyze_time", analyzeTime);
+			DataTable analyzesData = Data.QueryDataTable("SELECT id, stock_id, action FROM analyzes WHERE DATE(analyze_time)=DATE(@analyze_time)", "analyze_time", analyzeTime);
+			DataTable snapshotsData = Data.QueryDataTable("SELECT stock_id, DATE(take_time) take_time, close FROM snapshots WHERE DATE(take_time)<=DATE(@time) ORDER BY take_time", "time", CurrentDateTime);
 
 			StringBuilder query = new StringBuilder();
 
@@ -36,10 +38,13 @@ namespace Core
 				DataRow analyzeRow = analyzesData.Rows[i];
 
 				snapshotsData.DefaultView.RowFilter = string.Format("stock_id={0}", analyzeRow["stock_id"]);
-				if (snapshotsData.DefaultView.Count < 2 || Convert.ToDateTime(snapshotsData.DefaultView[0]["take_time"]).Date != analyzeTime.Date || Convert.ToDateTime(snapshotsData.DefaultView[1]["take_time"]).Date != CurrentDateTime.Date)
+				if (snapshotsData.DefaultView.Count < BACKLOG_COUNT + 2)
 					continue;
 
-				DataTable smaData = Indicator.GenerateSimpleMovingAverageData(snapshotsData.DefaultView.ToTable(), "close", 9, 2);
+				if (Convert.ToDateTime(snapshotsData.DefaultView[snapshotsData.DefaultView.Count - 1]["take_time"]).Date != CurrentDateTime.Date)
+					continue;
+
+				DataTable smaData = Indicator.GenerateSimpleMovingAverageData(snapshotsData.DefaultView.ToTable(), "close", BACKLOG_COUNT, 2);
 				if (smaData == null)
 					continue;
 
